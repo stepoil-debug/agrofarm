@@ -1,0 +1,3 @@
+-- Os catálogos oficiais já são inseridos pela migration.
+-- Este arquivo fica reservado para dados de demonstração que não dependam de auth.users.
+-- Jogadores e fazendas são criados automaticamente após o primeiro login Google.
