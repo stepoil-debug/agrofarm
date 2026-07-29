@@ -1,5 +1,5 @@
-const CACHE_NAME = 'agrofarm-v2'
-const APP_SHELL = ['./', './index.html', './src/app.js', './src/github-pages.js', './src/styles.css', './public/manifest.webmanifest', './public/icon.svg', './public/config.js']
+const CACHE_NAME = 'agrofarm-v3-game'
+const APP_SHELL = ['./', './index.html', './src/game.js', './src/game.css', './src/github-pages.js', './public/manifest.webmanifest', './public/icon.svg', './public/config.js']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
