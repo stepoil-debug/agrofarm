@@ -2,19 +2,64 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#173f2d" />
-    <meta name="description" content="AgroFarm RPG — construa, automatize e administre sua fazenda." />
+    <meta name="description" content="AgroFarm RPG — viva, plante e desenvolva sua fazenda." />
     <link rel="manifest" href="./public/manifest.webmanifest" />
     <link rel="icon" href="./public/icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./src/styles.css" />
+    <link rel="stylesheet" href="./src/game.css" />
     <title>AgroFarm RPG</title>
   </head>
   <body>
-    <div id="root" aria-live="polite"></div>
-    <noscript>Ative o JavaScript para jogar AgroFarm.</noscript>
+    <main id="game-shell">
+      <canvas id="game" aria-label="Mapa jogável da fazenda"></canvas>
+      <header id="hud-top" class="glass">
+        <div class="brand"><span>🌱</span><strong>AgroFarm</strong></div>
+        <div class="hud-stat"><span>🪙</span><strong id="coins">100</strong></div>
+        <div class="hud-stat"><span>🏡</span><strong id="farm-level">LV 1</strong></div>
+        <div class="hud-stat"><span>🎒</span><strong id="capacity">0/10</strong></div>
+        <button id="mode-button" class="hud-button" type="button">Livre</button>
+        <button id="menu-button" class="hud-button" type="button">☰</button>
+      </header>
+      <section id="mission" class="glass">
+        <span class="mission-label">MISSÃO</span>
+        <strong id="mission-title">Plante sua primeira cultura</strong>
+        <div class="mission-progress"><span id="mission-bar"></span></div>
+        <small id="mission-text">Prepare um terreno e use as sementes.</small>
+      </section>
+      <div id="interaction" class="glass hidden">
+        <span id="interaction-key">E</span><strong id="interaction-text">Interagir</strong>
+      </div>
+      <nav id="toolbar" class="glass" aria-label="Ferramentas">
+        <button class="tool active" data-tool="hoe" type="button"><span>⛏️</span><small>Enxada</small></button>
+        <button class="tool" data-tool="seed" type="button"><span>🌱</span><small>Plantar</small></button>
+        <button class="tool" data-tool="water" type="button"><span>💧</span><small>Regar</small></button>
+        <button class="tool" data-tool="protect" type="button"><span>🛡️</span><small>Defensivo</small></button>
+        <button class="tool" data-tool="hand" type="button"><span>🧺</span><small>Colher</small></button>
+      </nav>
+      <div id="crop-picker" class="glass">
+        <button class="crop selected" data-crop="corn" type="button">🌽 <span>Milho</span></button>
+        <button class="crop" data-crop="cassava" type="button">🌿 <span>Mandioca</span></button>
+        <button class="crop" data-crop="pineapple" type="button">🍍 <span>Abacaxi</span></button>
+      </div>
+      <div id="mobile-controls" aria-label="Controles para celular">
+        <div id="joystick"><div id="stick"></div></div>
+        <button id="action-button" type="button"><span>A</span><small>Ação</small></button>
+      </div>
+      <div id="toast" class="hidden" role="status"></div>
+      <section id="dialog" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card"><button class="modal-close" type="button" aria-label="Fechar">×</button><div id="dialog-content"></div></div>
+      </section>
+      <section id="start-screen" class="start-screen">
+        <div class="start-card">
+          <div class="start-logo">🌱</div><p class="eyebrow">UM RPG DE VIDA RURAL</p><h1>AgroFarm</h1>
+          <p>Comece com 100 moedas, cuide da terra, evolua sua sede e construa um império agroindustrial.</p>
+          <button id="play-button" type="button">Jogar agora</button>
+          <small>WASD ou setas para andar · E para interagir</small>
+        </div>
+      </section>
+    </main>
     <script src="./public/config.js"></script>
-    <script type="module" src="./src/app.js"></script>
-    <script type="module" src="./src/github-pages.js"></script>
+    <script type="module" src="./src/game.js"></script>
   </body>
 </html>
