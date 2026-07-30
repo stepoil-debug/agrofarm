@@ -1,0 +1,52 @@
+name: Corrigir fonte rural
+
+on:
+  push:
+    branches: ["fix/rural-runtime-smoke"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-source:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/rural-runtime-smoke
+          fetch-depth: 0
+
+      - name: Corrigir tipagem do controlador rural
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('apps/agrofarm-godot/scripts/main_rural.gd')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              'var count := game.get("expansions", []).size()',
+              'var count: int = int(game.get("expansions", []).size())',
+          )
+          text = text.replace(
+              'var cost := EXPANSION_COSTS[mini(count, EXPANSION_COSTS.size() - 1)]',
+              'var cost: float = float(EXPANSION_COSTS[mini(count, EXPANSION_COSTS.size() - 1)])',
+          )
+          text = text.replace(
+              'var cost := EXPANSION_COSTS[mini(expansions.size(), EXPANSION_COSTS.size() - 1)]',
+              'var cost: float = float(EXPANSION_COSTS[mini(expansions.size(), EXPANSION_COSTS.size() - 1)])',
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Salvar correção na branch
+        run: |
+          if git diff --quiet; then
+            echo "Fonte já corrigida."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/agrofarm-godot/scripts/main_rural.gd
+          git commit -m "fix: tipar custos e contagem das expansões"
+          git push origin HEAD:fix/rural-runtime-smoke
