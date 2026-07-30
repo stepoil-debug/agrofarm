@@ -23,7 +23,7 @@ namespace AgroFarm.Editor
         {
             EnsureScene();
             ConfigurePlayer();
-            ValidateRenderPipeline();
+            URPProjectConfigurator.EnsureAssigned();
         }
 
         private static void EnsureScene()
@@ -84,16 +84,6 @@ namespace AgroFarm.Editor
                 return;
             activeInputHandler.intValue = 2;
             playerSettings.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void ValidateRenderPipeline()
-        {
-            if (GraphicsSettings.defaultRenderPipeline == null)
-            {
-                Debug.LogWarning(
-                    "AgroFarm: crie um URP Asset em Assets > Create > Rendering > URP Asset (with Universal Renderer) " +
-                    "e associe em Project Settings > Graphics. O jogo abre com o pipeline Built-in, mas o visual final exige URP.");
-            }
         }
     }
 }
