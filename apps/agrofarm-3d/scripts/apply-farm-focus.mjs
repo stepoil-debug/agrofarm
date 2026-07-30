@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const mainPath = new URL('../src/main.ts', import.meta.url)
-const worldPath = new URL('../src/world.ts', import.meta.url)
 
 const replaceOnce = (source, pattern, replacement, label) => {
   if (source.includes(replacement)) return source
@@ -10,16 +9,22 @@ const replaceOnce = (source, pattern, replacement, label) => {
   return next
 }
 
-let world = readFileSync(worldPath, 'utf8')
-
-const ruralCow = `private cow(x:number,z:number,phase:number){const root=this.f.group('Cow',this.root);root.setPosition(x,0,z);this.f.addShadow(root,0,.1,1.05,.55);this.f.sphere('Body',root,new Vec3(0,1.03,0),new Vec3(1.45,.74,.7),'#f3ead4');this.f.sphere('Shoulder',root,new Vec3(.72,1.06,0),new Vec3(.72,.7,.66),'#f3ead4');this.f.sphere('Patch',root,new Vec3(-.25,1.17,.6),new Vec3(.58,.35,.09),'#3f3a35');this.f.sphere('Patch',root,new Vec3(.52,.95,-.59),new Vec3(.45,.29,.08),'#3f3a35');const head=this.f.sphere('Head',root,new Vec3(1.7,1.02,0),new Vec3(.58,.5,.48),'#f1e7d3');this.f.sphere('Muzzle',head,new Vec3(.45,-.08,0),new Vec3(.34,.23,.34),'#d59f83');this.f.sphere('Eye',head,new Vec3(.18,.14,.43),new Vec3(.06,.06,.04),'#24221f');this.f.sphere('Eye',head,new Vec3(.18,.14,-.43),new Vec3(.06,.06,.04),'#24221f');this.f.cone('Ear',head,new Vec3(-.05,.24,.53),new Vec3(.15,.32,.12),'#d8b398',new Vec3(0,0,90));this.f.cone('Ear',head,new Vec3(-.05,.24,-.53),new Vec3(.15,.32,.12),'#d8b398',new Vec3(0,0,-90));for(const lx of[-.82,.78])for(const lz of[-.42,.42]){this.f.cylinder('Leg',root,new Vec3(lx,.42,lz),new Vec3(.14,.82,.14),'#e7dbc4');this.f.cylinder('Hoof',root,new Vec3(lx,.06,lz),new Vec3(.16,.14,.16),'#3f352f')}const tail=this.f.cylinder('Tail',root,new Vec3(-1.38,1.08,0),new Vec3(.08,.8,.08),'#6e5140',new Vec3(0,0,66));this.f.sphere('Tail tip',root,new Vec3(-1.7,.78,0),new Vec3(.16,.2,.16),'#3b332d');return{root,head,tail,base:new Vec3(x,0,z),phase,kind:'cow' as const}}private chicken`
-world = replaceOnce(world, /private cow\([\s\S]*?\}private chicken/, ruralCow, 'vacas rurais')
-
-const ruralLoader = `async loadExternalModels(progress:(value:number,label:string)=>void):Promise<void>{progress(.3,'Montando casa rural, celeiro e galinheiro...');await new Promise<void>(resolve=>window.setTimeout(resolve,100));progress(.7,'Preparando animais e equipamentos agrícolas...');await new Promise<void>(resolve=>window.setTimeout(resolve,100));progress(1,'Fazenda pronta para jogar.')}`
-world = replaceOnce(world, /async loadExternalModels\([\s\S]*?\}\}/, `${ruralLoader}}`, 'remover modelos urbanos')
-writeFileSync(worldPath, world)
-
 let main = readFileSync(mainPath, 'utf8')
+
+main = replaceOnce(
+  main,
+  `const world=new FarmWorld(app);let state:GameState=loadState();`,
+  `const world=new FarmWorld(app);const hideTemporaryCows=(entity:Entity)=>{for(const child of entity.children){if(child.name==='Cow')child.enabled=false;hideTemporaryCows(child)}};hideTemporaryCows(world.root);let state:GameState=loadState();`,
+  'ocultar vacas provisórias',
+)
+
+main = replaceOnce(
+  main,
+  `await world.loadExternalModels((progress,label)=>{if(dom.loadingProgress)dom.loadingProgress.style.width=\`${18+progress*72}%\`;if(dom.loadingLabel)dom.loadingLabel.textContent=label});`,
+  `if(dom.loadingProgress)dom.loadingProgress.style.width='82%';if(dom.loadingLabel)dom.loadingLabel.textContent='Montando celeiro, curral e galinheiro...';await new Promise<void>(resolve=>window.setTimeout(resolve,220));`,
+  'bloquear modelos urbanos externos',
+)
+
 main = replaceOnce(
   main,
   `let joystick={x:0,y:0},joystickPointer:number|null=null,pointerDown:{id:number;x:number;y:number;moved:boolean;rotating:boolean}|null=null`,
