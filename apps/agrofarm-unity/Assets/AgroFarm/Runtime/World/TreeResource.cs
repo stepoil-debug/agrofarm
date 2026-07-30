@@ -17,13 +17,18 @@ namespace AgroFarm
             persistentId = id;
             woodReward = reward;
             removalCost = cost;
+            ApplySavedState();
         }
 
         private void Awake()
         {
             if (string.IsNullOrWhiteSpace(persistentId))
                 persistentId = $"tree-{transform.position.x:0.0}-{transform.position.z:0.0}";
+            ApplySavedState();
+        }
 
+        private void ApplySavedState()
+        {
             FarmSession session = FarmSession.Instance;
             if (session != null && session.Save.removedTreeIds.Contains(persistentId))
                 gameObject.SetActive(false);
@@ -31,7 +36,7 @@ namespace AgroFarm
 
         public Vector3 GetApproachPoint(Vector3 actorPosition)
         {
-            Vector3 away = (actorPosition - transform.position);
+            Vector3 away = actorPosition - transform.position;
             away.y = 0f;
             if (away.sqrMagnitude < 0.01f)
                 away = Vector3.forward;
@@ -70,10 +75,11 @@ namespace AgroFarm
             if (!session.Save.removedTreeIds.Contains(persistentId))
                 session.Save.removedTreeIds.Add(persistentId);
 
-            session.AddWood(woodReward > 0 ? woodReward : session.Balance.woodPerTree);
+            int reward = woodReward > 0 ? woodReward : session.Balance.woodPerTree;
+            session.AddWood(reward);
             session.NotifyChanged();
             gameObject.SetActive(false);
-            FarmHUD.Instance?.ShowMessage($"Árvore removida. +{woodReward} madeiras.");
+            FarmHUD.Instance?.ShowMessage($"Árvore removida. +{reward} madeiras.");
             return true;
         }
     }
