@@ -1,0 +1,45 @@
+{
+  "policy": "Somente assets com licença comercial explícita podem entrar no build público.",
+  "sources": [
+    {
+      "name": "Ultimate Crops Pack",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "url": "https://quaternius.com/packs/ultimatecrops.html",
+      "usage": "Culturas e estágios de crescimento",
+      "status": "planned"
+    },
+    {
+      "name": "Farm Animal Pack",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "url": "https://quaternius.com/packs/farmanimal.html",
+      "usage": "Vacas, galinhas e outros animais animados",
+      "status": "planned"
+    },
+    {
+      "name": "Ultimate Stylized Nature Pack",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "url": "https://quaternius.com/packs/ultimatestylizednature.html",
+      "usage": "Árvores, plantas, pedras e vegetação",
+      "status": "planned"
+    },
+    {
+      "name": "Character Pack: Adventurers",
+      "author": "KayKit",
+      "license": "CC0-1.0",
+      "url": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "usage": "Base temporária para personagem rigado e animado",
+      "status": "planned"
+    },
+    {
+      "name": "Starter Kit City Builder",
+      "author": "Kenney",
+      "license": "MIT code / CC0 assets",
+      "url": "https://github.com/KenneyNL/Starter-Kit-City-Builder",
+      "usage": "Referência de câmera, construção, salvamento e organização de recursos",
+      "status": "reference-only"
+    }
+  ]
+}
