@@ -19,12 +19,16 @@ func setup(kind: String, world_position: Vector3, radius: float = 2.5) -> void:
 	visual_root = Node3D.new()
 	visual_root.name = "Visual"
 	add_child(visual_root)
-	if species == "cow":
-		speed = 0.34
-		_build_cow()
-	else:
-		speed = 0.62
-		_build_chicken()
+	match species:
+		"cow":
+			speed = 0.34
+			_build_cow()
+		"pig":
+			speed = 0.42
+			_build_pig()
+		_:
+			speed = 0.62
+			_build_chicken()
 	_pick_target()
 
 func _process(delta: float) -> void:
@@ -44,7 +48,12 @@ func _process(delta: float) -> void:
 	position += direction * minf(remaining, speed * delta)
 	var desired_yaw := atan2(direction.x, direction.z)
 	rotation.y = lerp_angle(rotation.y, desired_yaw, minf(1.0, delta * 5.0))
-	visual_root.position.y = abs(sin(phase * 7.0)) * (0.025 if species == "cow" else 0.05)
+	var bounce := 0.025
+	if species == "chicken":
+		bounce = 0.05
+	elif species == "pig":
+		bounce = 0.018
+	visual_root.position.y = abs(sin(phase * 7.0)) * bounce
 
 func _pick_target() -> void:
 	var angle := randf() * TAU
@@ -92,3 +101,21 @@ func _build_chicken() -> void:
 		VisualFactory.sphere(visual_root, "Eye", Vector3(side * 0.1, 0.67, 0.29), 0.025, dark, Vector3.ONE, false)
 		VisualFactory.cylinder(visual_root, "Leg", Vector3(side * 0.08, 0.11, 0), 0.025, 0.25, yellow, Vector3.ZERO, 8)
 	VisualFactory.sphere(visual_root, "Tail", Vector3(0, 0.43, -0.28), 0.14, body_color, Vector3(0.65, 1.15, 0.55))
+
+func _build_pig() -> void:
+	var pink := Color("e9a69c")
+	var light_pink := Color("f2bab0")
+	var dark := Color("4a3432")
+	VisualFactory.capsule(visual_root, "Body", Vector3(0, 0.55, 0), 0.36, 1.18, pink, Vector3(0, 0, PI / 2.0))
+	VisualFactory.sphere(visual_root, "Head", Vector3(0, 0.67, 0.58), 0.31, light_pink, Vector3(0.95, 0.9, 1.05))
+	VisualFactory.sphere(visual_root, "Snout", Vector3(0, 0.58, 0.86), 0.16, Color("d88983"), Vector3(1.05, 0.62, 0.62))
+	for side in [-1.0, 1.0]:
+		VisualFactory.sphere(visual_root, "Ear", Vector3(side * 0.22, 0.91, 0.54), 0.13, pink, Vector3(0.7, 1.0, 0.55))
+		VisualFactory.sphere(visual_root, "Eye", Vector3(side * 0.13, 0.72, 0.82), 0.028, dark, Vector3.ONE, false)
+		VisualFactory.sphere(visual_root, "Nostril", Vector3(side * 0.055, 0.59, 1.0), 0.022, dark, Vector3.ONE, false)
+	for x in [-0.24, 0.24]:
+		for z in [-0.31, 0.31]:
+			VisualFactory.cylinder(visual_root, "Leg", Vector3(x, 0.22, z), 0.065, 0.38, pink, Vector3.ZERO, 9)
+			VisualFactory.cylinder(visual_root, "Hoof", Vector3(x, 0.05, z), 0.07, 0.12, dark, Vector3.ZERO, 9)
+	var tail := VisualFactory.cylinder(visual_root, "Tail", Vector3(0, 0.62, -0.68), 0.025, 0.35, pink, Vector3(0.8, 0, 0.2), 8)
+	tail.rotation.z = 0.7
