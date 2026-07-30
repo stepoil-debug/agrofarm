@@ -58,11 +58,7 @@ namespace AgroFarm.Editor
             pipeline.shadowDistance = 70f;
             pipeline.shadowCascadeCount = 2;
             pipeline.mainLightRenderingMode = LightRenderingMode.PerPixel;
-            pipeline.mainLightShadowsSupported = true;
             pipeline.additionalLightsRenderingMode = LightRenderingMode.PerPixel;
-            pipeline.additionalLightsPerObjectLimit = 4;
-            pipeline.additionalLightShadowsSupported = false;
-            pipeline.supportsSoftShadows = true;
             pipeline.useSRPBatcher = true;
             pipeline.upscalingFilter = UpscalingFilterSelection.Auto;
         }
