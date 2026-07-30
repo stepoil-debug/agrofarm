@@ -26,8 +26,9 @@ func _register_building_roots() -> void:
 			continue
 		var info: Dictionary = buildings[key]
 		var area := info.get("area") as Area3D
+		var entrance_value: Vector3 = info.get("entrance", root.position)
 		info["root"] = root
-		info["entrance_offset"] = Vector3(info.get("entrance", root.position)) - root.position
+		info["entrance_offset"] = entrance_value - root.position
 		info["area_offset"] = area.position - root.position if area != null else Vector3.ZERO
 		buildings[key] = info
 	var coop_root := find_child("ChickenCoop", false, false) as Node3D
@@ -122,11 +123,13 @@ func move_building(key: String, target: Vector3) -> bool:
 	var area := info.get("area") as Area3D
 	if root == null:
 		return false
+	var area_offset: Vector3 = info.get("area_offset", Vector3.ZERO)
+	var entrance_offset: Vector3 = info.get("entrance_offset", Vector3(0, 0, 3))
 	var final_position := Vector3(target.x, root.position.y, target.z)
 	root.position = final_position
 	if area != null:
-		area.position = final_position + Vector3(info.get("area_offset", Vector3.ZERO))
-	info["entrance"] = final_position + Vector3(info.get("entrance_offset", Vector3(0, 0, 3)))
+		area.position = final_position + area_offset
+	info["entrance"] = final_position + entrance_offset
 	buildings[key] = info
 	return true
 
