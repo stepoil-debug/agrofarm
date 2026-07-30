@@ -3,8 +3,7 @@
   "rootNamespace": "AgroFarm",
   "references": [
     "Unity.InputSystem",
-    "Unity.RenderPipelines.Universal.Runtime",
-    "Unity.TextMeshPro"
+    "Unity.RenderPipelines.Universal.Runtime"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
