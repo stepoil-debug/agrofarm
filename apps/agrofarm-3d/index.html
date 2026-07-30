@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#72b951" />
+    <meta name="description" content="AgroFarm — RPG 3D de vida rural para computador e celular." />
+    <title>AgroFarm 3D</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="game-canvas" aria-label="Fazenda 3D jogável"></canvas>
+      <header class="top-hud panel" aria-label="Informações da fazenda">
+        <div class="brand"><span class="brand-mark">🌱</span><strong>AgroFarm</strong></div>
+        <div class="stat"><span>🪙</span><b id="coins">100,00</b></div>
+        <div class="stat"><span>🏡</span><b id="farm-level">LV 1</b></div>
+        <div class="stat"><span>🎒</span><b id="storage">0/10</b></div>
+        <div class="stat weather"><span id="weather-icon">☀️</span><b id="clock">08:00</b></div>
+        <button id="mode-button" class="pill-button" type="button">Livre</button>
+        <button id="menu-button" class="round-button" type="button" aria-label="Abrir menu">☰</button>
+      </header>
+      <section class="mission panel" aria-live="polite">
+        <span class="mission-icon">📜</span>
+        <div><small>MISSÃO ATUAL</small><strong id="mission-title">Prepare o primeiro terreno</strong><div class="mission-progress"><i id="mission-progress"></i></div><span id="mission-text">Equipe a enxada e interaja com um lote.</span></div>
+      </section>
+      <nav id="crop-picker" class="crop-picker panel" aria-label="Escolher cultura">
+        <button class="crop selected" data-crop="corn" type="button"><span>🌽</span><b>Milho</b></button>
+        <button class="crop" data-crop="cassava" type="button"><span>🌿</span><b>Mandioca</b></button>
+        <button class="crop" data-crop="pineapple" type="button"><span>🍍</span><b>Abacaxi</b></button>
+      </nav>
+      <div id="interaction" class="interaction panel hidden"><kbd>E</kbd><strong id="interaction-text">Interagir</strong></div>
+      <nav id="toolbar" class="toolbar panel" aria-label="Ferramentas">
+        <button class="tool active" data-tool="hoe" type="button"><span>⛏️</span><small>Enxada</small><em>1</em></button>
+        <button class="tool" data-tool="seed" type="button"><span>🌱</span><small>Plantar</small><em>2</em></button>
+        <button class="tool" data-tool="water" type="button"><span>💧</span><small>Regar</small><em>3</em></button>
+        <button class="tool" data-tool="protect" type="button"><span>🛡️</span><small>Defensivo</small><em>4</em></button>
+        <button class="tool" data-tool="harvest" type="button"><span>🧺</span><small>Colher</small><em>5</em></button>
+      </nav>
+      <div class="zoom-controls panel" aria-label="Controles de câmera"><button id="zoom-in" type="button" aria-label="Aproximar">＋</button><button id="camera-home" type="button" aria-label="Centralizar câmera">⌂</button><button id="zoom-out" type="button" aria-label="Afastar">−</button></div>
+      <div id="mobile-controls" aria-label="Controles para celular"><div id="joystick"><div id="stick"></div></div><button id="action-button" type="button"><span>A</span><small>Ação</small></button></div>
+      <div id="building-labels" aria-hidden="true"><span data-building="house">🏡 Sede</span><span data-building="barn">🌾 Galpão</span><span data-building="market">🛒 Mercado</span><span data-building="workshop">⚙️ Oficina</span></div>
+      <div id="toast" class="toast hidden" role="status"></div>
+      <section id="dialog" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><button class="modal-close" type="button" aria-label="Fechar">×</button><div id="dialog-content"></div></div></section>
+      <section id="loading" class="loading"><div class="loading-scenery"><i></i><i></i><i></i></div><div class="loading-card"><span class="loading-logo">🌱</span><p class="eyebrow">UM RPG DE VIDA RURAL</p><h1>AgroFarm</h1><p id="loading-label">Preparando a fazenda 3D...</p><div class="progress"><i id="loading-progress"></i></div><button id="play-button" class="play-button hidden" type="button">Entrar na fazenda</button><small>WASD ou setas para andar · E para interagir · arraste para girar a câmera</small></div></section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

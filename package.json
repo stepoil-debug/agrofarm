@@ -1,14 +1,15 @@
 {
   "name": "agrofarm-rpg",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
+  "workspaces": ["apps/agrofarm-3d"],
   "scripts": {
-    "dev": "node server.mjs",
-    "build": "node scripts/build.mjs",
-    "validate": "node scripts/validate.mjs"
+    "dev": "npm --workspace @agrofarm/game-3d run dev",
+    "validate": "node scripts/validate.mjs && npm --workspace @agrofarm/game-3d run check",
+    "build": "npm --workspace @agrofarm/game-3d run build"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }
