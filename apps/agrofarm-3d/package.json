@@ -1,10 +1,14 @@
 {
   "name": "@agrofarm/game-3d",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "assets": "node scripts/fetch-assets.mjs",
+    "predev": "npm run assets",
     "dev": "vite --host 0.0.0.0",
+    "check": "tsc --noEmit",
+    "prebuild": "npm run assets",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
