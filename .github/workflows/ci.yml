@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, "feat/**", "rewrite/**"]
+    branches: [main, "feat/**", "fix/**", "rewrite/**"]
   pull_request:
     branches: [main]
 
@@ -35,6 +35,16 @@ jobs:
       - name: Importar e validar scripts
         run: |
           timeout 90 godot --headless --path apps/agrofarm-godot --editor --quit
+
+      - name: Executar smoke test da cena
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path apps/agrofarm-godot --quit-after 4 2>&1 | tee /tmp/agrofarm-runtime.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Attempt to call|Cannot call method|not previously assigned" /tmp/agrofarm-runtime.log; then
+            echo "Falha de execução detectada no jogo."
+            exit 1
+          fi
 
       - name: Exportar versão Web
         run: |
