@@ -41,6 +41,7 @@ namespace AgroFarm
             FarmExpansionManager expansions = gameObject.AddComponent<FarmExpansionManager>();
             FarmWorldFactory factory = gameObject.AddComponent<FarmWorldFactory>();
             factory.Initialize(expansions);
+            FarmSavedWorldRestorer.Restore(factory, session.Save);
 
             AAAFarmPlayerMotor player = CreatePlayer(transform);
             (IsometricCameraRig rig, Camera camera) = CreateCamera(player.transform, transform);
