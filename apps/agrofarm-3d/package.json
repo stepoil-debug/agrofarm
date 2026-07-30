@@ -1,21 +1,17 @@
 {
   "name": "@agrofarm/game-3d",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
-    "assets": "node scripts/fetch-assets.mjs",
-    "farm-focus": "node scripts/apply-farm-focus.mjs",
-    "predev": "npm run assets && npm run farm-focus",
+    "premium-fix": "node scripts/apply-premium-fix.mjs",
+    "predev": "npm run premium-fix",
     "dev": "vite --host 0.0.0.0",
-    "precheck": "npm run farm-focus",
+    "precheck": "npm run premium-fix",
     "check": "tsc --noEmit",
-    "prebuild": "npm run assets && npm run farm-focus",
+    "prebuild": "npm run premium-fix",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0"
-  },
-  "dependencies": {
-    "playcanvas": "^2.18.1"
   },
   "devDependencies": {
     "typescript": "^6.0.3",
