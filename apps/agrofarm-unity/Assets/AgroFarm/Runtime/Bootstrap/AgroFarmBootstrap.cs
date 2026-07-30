@@ -9,6 +9,12 @@ namespace AgroFarm
     {
         private static bool bootstrapped;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            bootstrapped = false;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void EnsureBootstrap()
         {
@@ -36,8 +42,8 @@ namespace AgroFarm
             FarmWorldFactory factory = gameObject.AddComponent<FarmWorldFactory>();
             factory.Initialize(expansions);
 
-            AAAFarmPlayerMotor player = CreatePlayer();
-            (IsometricCameraRig rig, Camera camera) = CreateCamera(player.transform);
+            AAAFarmPlayerMotor player = CreatePlayer(transform);
+            (IsometricCameraRig rig, Camera camera) = CreateCamera(player.transform, transform);
             player.SetCameraReference(camera.transform);
 
             FarmPlacementSystem placement = gameObject.AddComponent<FarmPlacementSystem>();
@@ -65,9 +71,10 @@ namespace AgroFarm
             DontDestroyOnLoad(eventSystemObject);
         }
 
-        private static AAAFarmPlayerMotor CreatePlayer()
+        private static AAAFarmPlayerMotor CreatePlayer(Transform parent)
         {
             GameObject player = new("Player");
+            player.transform.SetParent(parent, false);
             player.transform.position = new Vector3(0f, 0.05f, -1f);
 
             Rigidbody body = player.AddComponent<Rigidbody>();
@@ -93,9 +100,10 @@ namespace AgroFarm
             return player.AddComponent<AAAFarmPlayerMotor>();
         }
 
-        private static (IsometricCameraRig, Camera) CreateCamera(Transform target)
+        private static (IsometricCameraRig, Camera) CreateCamera(Transform target, Transform parent)
         {
             GameObject rigObject = new("IsometricCameraRig");
+            rigObject.transform.SetParent(parent, false);
             IsometricCameraRig rig = rigObject.AddComponent<IsometricCameraRig>();
 
             GameObject cameraObject = new("Main Camera");
