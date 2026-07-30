@@ -20,7 +20,7 @@ main = replaceOnce(
 
 main = replaceOnce(
   main,
-  `await world.loadExternalModels((progress,label)=>{if(dom.loadingProgress)dom.loadingProgress.style.width=\`${18+progress*72}%\`;if(dom.loadingLabel)dom.loadingLabel.textContent=label});`,
+  'await world.loadExternalModels((progress,label)=>{if(dom.loadingProgress)dom.loadingProgress.style.width=`${18+progress*72}%`;if(dom.loadingLabel)dom.loadingLabel.textContent=label});',
   `if(dom.loadingProgress)dom.loadingProgress.style.width='82%';if(dom.loadingLabel)dom.loadingLabel.textContent='Montando celeiro, curral e galinheiro...';await new Promise<void>(resolve=>window.setTimeout(resolve,220));`,
   'bloquear modelos urbanos externos',
 )
