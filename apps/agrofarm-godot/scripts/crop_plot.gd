@@ -13,10 +13,14 @@ var lost: bool = false
 var crop_visual: Node3D
 var soil_visual: MeshInstance3D
 var highlight_visual: MeshInstance3D
+var timer_label: Label3D
+var last_advanced_unix: float = 0.0
+var _last_timer_text := ""
 
 const SOIL_DRY := Color("704325")
 const SOIL_WET := Color("452c21")
 const GRASS := Color("6cb74d")
+const MAX_OFFLINE_SECONDS := 28800.0
 
 func setup(id_value: int, world_position: Vector3) -> void:
 	plot_id = id_value
@@ -38,7 +42,23 @@ func setup(id_value: int, world_position: Vector3) -> void:
 	crop_visual = Node3D.new()
 	crop_visual.name = "Crops"
 	add_child(crop_visual)
+	_build_timer_label()
 	input_event.connect(_on_input_event)
+
+func _build_timer_label() -> void:
+	timer_label = Label3D.new()
+	timer_label.name = "CropTimer"
+	timer_label.position = Vector3(0, 2.65, 0)
+	timer_label.text = ""
+	timer_label.font_size = 38
+	timer_label.outline_size = 10
+	timer_label.modulate = Color("fff8df")
+	timer_label.outline_modulate = Color("34412c")
+	timer_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	timer_label.no_depth_test = true
+	timer_label.fixed_size = true
+	timer_label.visible = false
+	add_child(timer_label)
 
 func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -56,6 +76,9 @@ func set_state(data: Dictionary) -> void:
 	watered = bool(data.get("watered", false))
 	protected_crop = bool(data.get("protected", false))
 	lost = bool(data.get("lost", false))
+	last_advanced_unix = float(data.get("last_advanced_unix", 0.0))
+	if crop_key.is_empty():
+		last_advanced_unix = 0.0
 	refresh_visual()
 
 func export_state() -> Dictionary:
@@ -66,29 +89,79 @@ func export_state() -> Dictionary:
 		"watered": watered,
 		"protected": protected_crop,
 		"lost": lost,
+		"last_advanced_unix": last_advanced_unix,
 	}
 
 func advance(delta: float, crop_data: Dictionary, realistic: bool) -> bool:
+	var now := Time.get_unix_time_from_system()
+	var elapsed := delta
+	if last_advanced_unix > 0.0:
+		elapsed = clampf(now - last_advanced_unix, 0.0, MAX_OFFLINE_SECONDS)
+	last_advanced_unix = now
 	if crop_key.is_empty() or lost or growth >= 1.0:
+		update_timer(crop_data)
 		return false
 	var duration := float(crop_data.get("duration", 45.0))
-	var care_multiplier := 1.0
-	care_multiplier *= 1.22 if watered else 0.55
-	care_multiplier *= 1.1 if protected_crop else 1.0
-	growth = minf(1.0, growth + delta / duration * care_multiplier)
+	var care_multiplier := _care_multiplier()
+	growth = minf(1.0, growth + elapsed / duration * care_multiplier)
 	if realistic and growth > 0.42 and not watered:
-		var loss_chance := delta * 0.0025
+		var loss_chance := minf(1.0, elapsed * 0.0025)
 		if randf() < loss_chance:
 			lost = true
 			refresh_visual()
+			update_timer(crop_data)
 			return true
+	update_timer(crop_data)
 	return false
+
+func _care_multiplier() -> float:
+	var multiplier := 1.22 if watered else 0.55
+	if protected_crop:
+		multiplier *= 1.1
+	return multiplier
+
+func remaining_seconds(crop_data: Dictionary) -> int:
+	if crop_key.is_empty() or lost or growth >= 1.0:
+		return 0
+	var duration := float(crop_data.get("duration", 45.0))
+	return maxi(0, ceili((1.0 - growth) * duration / maxf(0.01, _care_multiplier())))
+
+func update_timer(crop_data: Dictionary) -> void:
+	if timer_label == null:
+		return
+	if crop_key.is_empty():
+		timer_label.visible = false
+		_last_timer_text = ""
+		return
+	timer_label.visible = true
+	var next_text := ""
+	var next_color := Color("fff8df")
+	if lost:
+		next_text = "⚠ Perdida"
+		next_color = Color("ffb0a3")
+	elif growth >= 1.0:
+		next_text = "✓ Pronto!"
+		next_color = Color("e9f795")
+	else:
+		var seconds_left := remaining_seconds(crop_data)
+		var minutes := seconds_left / 60
+		var seconds := seconds_left % 60
+		next_text = "⏱ %02d:%02d" % [minutes, seconds]
+		if seconds_left <= 10:
+			next_color = Color("ffe56f")
+	if next_text != _last_timer_text:
+		_last_timer_text = next_text
+		timer_label.text = next_text
+	timer_label.modulate = next_color
 
 func refresh_visual() -> void:
 	soil_visual.material_override = VisualFactory.material(SOIL_WET if watered else (SOIL_DRY if tilled else GRASS), 0.94)
 	for child in crop_visual.get_children():
 		child.queue_free()
 	if crop_key.is_empty():
+		last_advanced_unix = 0.0
+		if timer_label != null:
+			timer_label.visible = false
 		_create_soil_rows()
 		return
 	if lost:
