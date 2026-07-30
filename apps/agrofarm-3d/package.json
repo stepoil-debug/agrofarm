@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "assets": "node scripts/fetch-assets.mjs",
-    "predev": "npm run assets",
+    "farm-focus": "node scripts/apply-farm-focus.mjs",
+    "predev": "npm run assets && npm run farm-focus",
     "dev": "vite --host 0.0.0.0",
+    "precheck": "npm run farm-focus",
     "check": "tsc --noEmit",
-    "prebuild": "npm run assets",
+    "prebuild": "npm run assets && npm run farm-focus",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
