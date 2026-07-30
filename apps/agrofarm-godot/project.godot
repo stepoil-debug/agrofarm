@@ -1,0 +1,51 @@
+; AgroFarm 3D — Godot 4.7
+; Projeto mobile-first para Web e Android
+config_version=5
+
+[application]
+config/name="AgroFarm 3D"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.34, 0.66, 0.37, 1)
+boot_splash/show_image=false
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/handheld/orientation=1
+window/energy_saving/keep_screen_on=true
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method.web="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+textures/canvas_textures/default_texture_filter=1
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/screen_space_aa=1
+occlusion_culling/use_occlusion_culling=true
+limits/spatial_indexer/update_iterations_per_frame=4
+
+[physics]
+common/physics_ticks_per_second=60
+common/max_physics_steps_per_frame=4
+
+[input]
+interact={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":69)]
+}
+zoom_in={
+"deadzone": 0.5,
+"events": [Object(InputEventMouseButton,"button_index":4), Object(InputEventKey,"physical_keycode":61)]
+}
+zoom_out={
+"deadzone": 0.5,
+"events": [Object(InputEventMouseButton,"button_index":5), Object(InputEventKey,"physical_keycode":45)]
+}
+
+[application_run]
+disable_stdout=false
