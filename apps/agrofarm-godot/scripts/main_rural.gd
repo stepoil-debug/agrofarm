@@ -704,8 +704,8 @@ func _open_expansion(direction: String) -> void:
 	if game.get("expansions", []).has(direction):
 		return
 	pending_expansion = direction
-	var count := game.get("expansions", []).size()
-	var cost := EXPANSION_COSTS[mini(count, EXPANSION_COSTS.size() - 1)]
+	var count: int = int(game.get("expansions", []).size())
+	var cost: float = float(EXPANSION_COSTS[mini(count, EXPANSION_COSTS.size() - 1)])
 	_clear_modal("Ampliar propriedade")
 	modal_content.add_child(_make_label("Esta compra libera uma nova faixa de terra para produção, animais e construções.", 15, Color("59654f")))
 	modal_content.add_child(_make_button("Comprar expansão - %.0f moedas" % cost, _purchase_pending_expansion, Color("dff18d"), Vector2(0, 52)))
@@ -714,7 +714,7 @@ func _purchase_pending_expansion() -> void:
 	if pending_expansion.is_empty():
 		return
 	var expansions: Array = game.get("expansions", [])
-	var cost := EXPANSION_COSTS[mini(expansions.size(), EXPANSION_COSTS.size() - 1)]
+	var cost: float = float(EXPANSION_COSTS[mini(expansions.size(), EXPANSION_COSTS.size() - 1)])
 	if float(game["coins"]) < cost:
 		_show_toast("Moedas insuficientes para ampliar a propriedade.")
 		return
