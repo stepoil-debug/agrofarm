@@ -1,7 +1,20 @@
 node_modules
 dist
+build
 .env
 .env.local
 .DS_Store
 *.log
 supabase/.temp
+
+# Godot
+.godot/
+apps/agrofarm-godot/.godot/
+apps/agrofarm-godot/assets/vendor/
+
+# Android
+*.keystore
+*.jks
+*.apk
+*.aab
+android/build/
