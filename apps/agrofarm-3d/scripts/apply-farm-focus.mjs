@@ -14,7 +14,7 @@ let main = readFileSync(mainPath, 'utf8')
 main = replaceOnce(
   main,
   `const world=new FarmWorld(app);let state:GameState=loadState();`,
-  `const world=new FarmWorld(app);const hideTemporaryCows=(entity:Entity)=>{for(const child of entity.children){if(child.name==='Cow')child.enabled=false;hideTemporaryCows(child)}};hideTemporaryCows(world.root);let state:GameState=loadState();`,
+  `const world=new FarmWorld(app);const hideTemporaryCows=(node:Entity)=>{for(const child of node.children){const entity=child as Entity;if(entity.name==='Cow')entity.enabled=false;hideTemporaryCows(entity)}};hideTemporaryCows(world.root);let state:GameState=loadState();`,
   'ocultar vacas provisórias',
 )
 
