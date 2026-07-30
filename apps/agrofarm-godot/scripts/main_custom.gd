@@ -89,6 +89,139 @@ func _build_interface() -> void:
 	super()
 	_build_customization_controls()
 
+func _build_top_hud(root: Control) -> void:
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.offset_left = -335
+	panel.offset_right = 335
+	panel.offset_top = 14
+	panel.offset_bottom = 72
+	panel.add_theme_stylebox_override("panel", _panel_style(Color("fff8e7"), 28))
+	root.add_child(panel)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 8)
+	panel.add_child(row)
+	row.add_child(_make_label("AgroFarm", 18, Color("33442d"), true))
+	for key_text in [["coins", "100.00"], ["level", "LV 1"], ["storage", "0/10"], ["clock", "Sol 08:00"]]:
+		var chip := PanelContainer.new()
+		chip.add_theme_stylebox_override("panel", _panel_style(Color("f3efd9"), 18, Color("eee8cc")))
+		var label := _make_label(key_text[1], 14, Color("39442e"), true)
+		chip.add_child(label)
+		row.add_child(chip)
+		hud[key_text[0]] = label
+	var mode_button := _make_button("Livre", _toggle_mode, Color("e8f49b"), Vector2(90, 40))
+	row.add_child(mode_button)
+	hud["mode"] = mode_button
+	row.add_child(_make_button("Menu", _open_menu, Color("e8f49b"), Vector2(66, 40)))
+
+func _build_mission_panel(root: Control) -> void:
+	var panel := PanelContainer.new()
+	panel.offset_left = 16
+	panel.offset_top = 18
+	panel.offset_right = 302
+	panel.offset_bottom = 142
+	panel.add_theme_stylebox_override("panel", _panel_style(Color("fff8e7"), 26))
+	root.add_child(panel)
+	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_theme_constant_override("separation", 4)
+	panel.add_child(column)
+	column.add_child(_make_label("MISSÃO ATUAL", 11, Color("8a6c2f"), true))
+	var title := _make_label("Prepare o primeiro terreno", 16, Color("3b402d"), true)
+	column.add_child(title)
+	var progress := ProgressBar.new()
+	progress.custom_minimum_size = Vector2(0, 9)
+	progress.max_value = 100
+	progress.show_percentage = false
+	column.add_child(progress)
+	var text := _make_label("Selecione a enxada e toque em um canteiro.", 12, Color("66705a"))
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(text)
+	hud["mission_title"] = title
+	hud["mission_text"] = text
+	hud["mission_progress"] = progress
+
+func _build_crop_picker(root: Control) -> void:
+	var panel := PanelContainer.new()
+	panel.anchor_left = 1.0
+	panel.anchor_right = 1.0
+	panel.offset_left = -350
+	panel.offset_right = -16
+	panel.offset_top = 18
+	panel.offset_bottom = 75
+	panel.add_theme_stylebox_override("panel", _panel_style(Color("fff8e7"), 26))
+	root.add_child(panel)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 5)
+	panel.add_child(row)
+	for key in CROP_DATA:
+		var info: Dictionary = CROP_DATA[key]
+		var button := _make_button(String(info["name"]), _select_crop.bind(key), Color("fff8e7"), Vector2(100, 40))
+		button.set_meta("crop", key)
+		button.add_to_group("crop_buttons")
+		row.add_child(button)
+
+func _build_toolbar(root: Control) -> void:
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 1.0
+	panel.anchor_bottom = 1.0
+	panel.offset_left = -285
+	panel.offset_right = 285
+	panel.offset_top = -88
+	panel.offset_bottom = -14
+	panel.add_theme_stylebox_override("panel", _panel_style(Color("fff8e7"), 26))
+	root.add_child(panel)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 5)
+	panel.add_child(row)
+	var tools := [["hoe", "1\nEnxada"], ["seed", "2\nPlantar"], ["water", "3\nRegar"], ["protect", "4\nDefensivo"], ["harvest", "5\nColher"]]
+	for data in tools:
+		var button := _make_button(data[1], _select_tool.bind(data[0]), Color("fff8e7"), Vector2(103, 58))
+		button.set_meta("tool", data[0])
+		button.add_to_group("tool_buttons")
+		row.add_child(button)
+
+func _build_zoom_controls(root: Control) -> void:
+	var panel := PanelContainer.new()
+	panel.anchor_left = 1.0
+	panel.anchor_right = 1.0
+	panel.anchor_top = 1.0
+	panel.anchor_bottom = 1.0
+	panel.offset_left = -78
+	panel.offset_right = -18
+	panel.offset_top = -192
+	panel.offset_bottom = -22
+	panel.add_theme_stylebox_override("panel", _panel_style(Color("fff8e7"), 24))
+	root.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 5)
+	panel.add_child(column)
+	column.add_child(_make_button("+", func(): camera_zoom = clampf(camera_zoom - 2.0, 13.0, 48.0), Color("e8f49b"), Vector2(48, 42)))
+	column.add_child(_make_button("Visão", _camera_home, Color("e8f49b"), Vector2(48, 42)))
+	column.add_child(_make_button("-", func(): camera_zoom = clampf(camera_zoom + 2.0, 13.0, 48.0), Color("e8f49b"), Vector2(48, 42)))
+
+func _update_hud() -> void:
+	if hud.is_empty() or game.is_empty():
+		return
+	hud["coins"].text = _format_coins(float(game["coins"]))
+	hud["level"].text = "LV %d" % int(game["level"])
+	hud["storage"].text = "%d/%d" % [_used_storage(), int(game["barn_capacity"])]
+	hud["mode"].text = "Livre" if String(game["mode"]) == "free" else "Realista"
+	var hour := int(day_minutes / 60.0) % 24
+	var minute := int(day_minutes) % 60
+	var weather_names := {"sunny": "Sol", "cloudy": "Nublado", "rain": "Chuva"}
+	hud["clock"].text = "%s %02d:%02d" % [weather_names.get(game.get("weather", "sunny"), "Sol"), hour, minute]
+	var mission := _mission()
+	hud["mission_title"].text = mission["title"]
+	hud["mission_text"].text = mission["text"]
+	hud["mission_progress"].value = mission["progress"]
+
 func _build_customization_controls() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 12
@@ -167,7 +300,7 @@ func _activate_axe() -> void:
 		return
 	_clear_modal("Comprar machado")
 	modal_content.add_child(_make_label("O machado permite cortar árvores e abrir espaço para expandir a fazenda.", 15, Color("59654f")))
-	modal_content.add_child(_make_button("Comprar machado · 120 moedas", _buy_axe, Color("dff18d"), Vector2(0, 50)))
+	modal_content.add_child(_make_button("Comprar machado - 120 moedas", _buy_axe, Color("dff18d"), Vector2(0, 50)))
 
 func _buy_axe() -> void:
 	if float(game["coins"]) < AXE_COST:
@@ -344,10 +477,19 @@ func _open_building(key: String) -> void:
 	super(key)
 
 func _open_menu() -> void:
-	super()
+	_clear_modal("AgroFarm 3D")
+	modal_content.add_child(_make_label("Jogo rural 3D preparado para computador e Android.", 18, Color("4d6245"), true))
+	modal_content.add_child(_make_label("Clique ou toque para caminhar e interagir. Botão direito gira a câmera; scroll e os botões laterais controlam o zoom.", 14, Color("66705a")))
 	modal_content.add_child(_make_label("Personalização: mova estruturas, construa cercas, corte árvores e compre novos canteiros.", 14, Color("66705a")))
-	modal_content.add_child(_make_button("Abrir modo de edição", func(): _close_modal(); if not edit_mode: _toggle_edit_mode(), Color("dff18d"), Vector2(0, 48)))
+	modal_content.add_child(_make_button("Abrir modo de edição", _open_edit_from_menu, Color("dff18d"), Vector2(0, 48)))
 	modal_content.add_child(_make_label("Madeira disponível: %d" % int(game.get("wood", 0)), 14, Color("66705a"), true))
+	modal_content.add_child(_make_button("Salvar agora", func(): _save_game(); _show_toast("Jogo salvo."), Color("e7efcb"), Vector2(0, 46)))
+	modal_content.add_child(_make_button("Reiniciar fazenda", _reset_game, Color("edc1aa"), Vector2(0, 46)))
+
+func _open_edit_from_menu() -> void:
+	_close_modal()
+	if not edit_mode:
+		_toggle_edit_mode()
 
 func _reset_game() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
