@@ -4,8 +4,12 @@
   "version": "1.1.0",
   "type": "module",
   "scripts": {
+    "premium-fix": "node scripts/apply-premium-fix.mjs",
+    "predev": "npm run premium-fix",
     "dev": "vite --host 0.0.0.0",
+    "precheck": "npm run premium-fix",
     "check": "tsc --noEmit",
+    "prebuild": "npm run premium-fix",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
