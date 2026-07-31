@@ -49,6 +49,13 @@ jobs:
           set -euo pipefail
           python3 scripts/prepare-classic.py "/tmp/harvest-base/Harvest Moon 2.0"
 
+      - name: Restaurar cache dos efeitos sonoros
+        run: |
+          set -euo pipefail
+          cd /tmp/harvest-base
+          git checkout "$UPSTREAM_COMMIT" -- "Harvest Moon 2.0/.import"
+          test -f "Harvest Moon 2.0/.import/bell.wav-c0276555e83dc3997cf546dab5593db3.sample"
+
       - name: Instalar Godot 3.6.2
         run: |
           set -euo pipefail
