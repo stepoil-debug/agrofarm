@@ -1,0 +1,83 @@
+name: Check AgroFarm Classic Deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/classic-status.yml
+  workflow_run:
+    workflows: ["Deploy AgroFarm Classic"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  record-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Consultar workflow e site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/actions/workflows/classic-deploy.yml/runs?per_page=1" \
+            > /tmp/runs.json
+
+          RUN_ID=$(jq -r '.workflow_runs[0].id // 0' /tmp/runs.json)
+          RUN_STATUS=$(jq -r '.workflow_runs[0].status // "not_found"' /tmp/runs.json)
+          RUN_CONCLUSION=$(jq -r '.workflow_runs[0].conclusion // "pending"' /tmp/runs.json)
+          RUN_URL=$(jq -r '.workflow_runs[0].html_url // ""' /tmp/runs.json)
+          HEAD_SHA=$(jq -r '.workflow_runs[0].head_sha // ""' /tmp/runs.json)
+
+          SITE_URL="https://stepoil-debug.github.io/agrofarm/"
+          HTTP_CODE=$(curl -L -sS -o /tmp/site.html -w '%{http_code}' --max-time 30 "$SITE_URL" || true)
+          TITLE=$(python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('/tmp/site.html').read_text(encoding='utf-8', errors='ignore') if Path('/tmp/site.html').exists() else ''
+          match = re.search(r'<title[^>]*>(.*?)</title>', text, re.I | re.S)
+          print(re.sub(r'\s+', ' ', match.group(1)).strip() if match else '')
+          PY
+          )
+          HAS_GODOT=$(grep -Eqi 'Godot|index\.wasm|index\.pck|canvas' /tmp/site.html 2>/dev/null && echo true || echo false)
+          HAS_CLASSIC=$(grep -Eqi 'AgroFarm Classic|AGROFARM CLASSIC' /tmp/site.html 2>/dev/null && echo true || echo false)
+
+          jq -n \
+            --arg checked_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson run_id "$RUN_ID" \
+            --arg run_status "$RUN_STATUS" \
+            --arg run_conclusion "$RUN_CONCLUSION" \
+            --arg run_url "$RUN_URL" \
+            --arg head_sha "$HEAD_SHA" \
+            --arg site_url "$SITE_URL" \
+            --arg http_code "$HTTP_CODE" \
+            --arg title "$TITLE" \
+            --argjson has_godot "$HAS_GODOT" \
+            --argjson has_classic "$HAS_CLASSIC" \
+            '{checked_at:$checked_at, workflow:{id:$run_id,status:$run_status,conclusion:$run_conclusion,url:$run_url,head_sha:$head_sha}, site:{url:$site_url,http_code:$http_code,title:$title,contains_godot_export:$has_godot,contains_agrofarm_classic:$has_classic}}' \
+            > deployment-status/classic.json
+
+          cat deployment-status/classic.json
+
+      - name: Salvar diagnóstico
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment-status/classic.json
+          if git diff --cached --quiet; then
+            echo "Status sem alteração."
+          else
+            git commit -m "ci: atualizar status da publicação classic [skip ci]"
+            git push origin main
+          fi
