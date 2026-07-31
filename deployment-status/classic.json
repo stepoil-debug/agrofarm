@@ -1,17 +1,17 @@
 {
-  "checked_at": "2026-07-31T11:40:47Z",
+  "checked_at": "2026-07-31T11:44:28Z",
   "workflow": {
-    "id": 30627778483,
+    "id": 30628006845,
     "status": "completed",
-    "conclusion": "failure",
-    "url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627778483",
-    "head_sha": "5a189e657dea7c76607b5e7418d2254a5da8aa28"
+    "conclusion": "success",
+    "url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30628006845",
+    "head_sha": "d621c78c079aa6fce125ed2022028c27a124f3e1"
   },
   "site": {
     "url": "https://stepoil-debug.github.io/agrofarm/",
     "http_code": "200",
-    "title": "AgroFarm 3D",
+    "title": "AgroFarm Classic",
     "contains_godot_export": true,
-    "contains_agrofarm_classic": false
+    "contains_agrofarm_classic": true
   }
 }
