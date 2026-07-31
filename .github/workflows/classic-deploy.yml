@@ -29,6 +29,12 @@ jobs:
       - name: Baixar repositório AgroFarm
         uses: actions/checkout@v4
 
+      - name: Instalar FFmpeg
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version | head -1
+
       - name: Baixar base funcional
         run: |
           set -euo pipefail
