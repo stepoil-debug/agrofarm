@@ -63,3 +63,5 @@ jobs:
           git add deployment-status/actions.json
           git commit -m "ci: registrar diagnóstico dos workflows [skip ci]"
           git push origin main
+
+# diagnóstico solicitado após implementação de navegação mobile por toque
