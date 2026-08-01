@@ -47,6 +47,18 @@ jobs:
       - name: Modelar base para o AgroFarm
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/prepare-classic.py')
+          text = path.read_text(encoding='utf-8')
+          start = text.find('    # Quando a próxima célula está bloqueada')
+          end_marker = '    text = text.replace(next_marker, next_replacement, 1)\n'
+          end = text.find(end_marker, start)
+          if start >= 0 and end >= 0:
+              end += len(end_marker)
+              text = text[:start] + text[end:]
+              path.write_text(text, encoding='utf-8')
+          PY
           python3 scripts/prepare-classic.py "/tmp/harvest-base/Harvest Moon 2.0"
 
       - name: Restaurar cache dos efeitos sonoros
