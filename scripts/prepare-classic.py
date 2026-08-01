@@ -224,6 +224,135 @@ def configure_economy(root: Path) -> None:
     replace(root, "ui/inventory/Inventory.tscn", 'text = "10"', 'text = "100"', 1)
 
 
+def configure_mobile_touch(root: Path) -> None:
+    player = root / "player" / "Player.gd"
+    text = player.read_text(encoding="utf-8")
+
+    movement_marker = "var is_moving = false\n"
+    touch_state = '''var is_moving = false
+
+# AgroFarm mobile: toque/clique no cenário define um destino.
+var touch_destination = Vector2()
+var has_touch_destination = false
+const TOUCH_STOP_DISTANCE = 18.0
+const TOUCH_AXIS_DEADZONE = 6.0
+'''
+    if movement_marker not in text:
+        raise RuntimeError("Estado de movimento do Player não encontrado")
+    text = text.replace(movement_marker, touch_state, 1)
+
+    ready_marker = '''func _ready():
+\tget_node("UI/Dashboard/TimeManager").connect("sleep", self, "_force_sleep")
+'''
+    ready_replacement = '''func _ready():
+\tget_node("UI/Dashboard/TimeManager").connect("sleep", self, "_force_sleep")
+\tset_process_unhandled_input(true)
+
+# Recebe apenas eventos não consumidos pela interface, evitando caminhar ao tocar
+# no inventário, loja, hotbar ou demais controles.
+func _unhandled_input(event):
+\tif ShopMenu.visible or Inventory.visible or animationCommit or teleport:
+\t\treturn
+\tif event is InputEventScreenTouch and event.pressed:
+\t\t_set_touch_destination(event.position)
+\telif event is InputEventMouseButton and event.button_index == BUTTON_LEFT and event.pressed:
+\t\t_set_touch_destination(event.position)
+
+func _set_touch_destination(screen_position):
+\tvar canvas_inverse = get_viewport().get_canvas_transform().affine_inverse()
+\ttouch_destination = canvas_inverse.xform(screen_position)
+\thas_touch_destination = true
+
+func _cancel_touch_destination():
+\thas_touch_destination = false
+
+func _touch_direction():
+\tif not has_touch_destination:
+\t\treturn Vector2()
+\tvar delta = touch_destination - global_position
+\tif delta.length() <= TOUCH_STOP_DISTANCE:
+\t\thas_touch_destination = false
+\t\treturn Vector2()
+\t# A base se move em células. Priorizar o maior eixo evita zigue-zague e
+\t# preserva todas as verificações de colisão já existentes no mapa.
+\tif abs(delta.x) > abs(delta.y):
+\t\tif abs(delta.x) > TOUCH_AXIS_DEADZONE:
+\t\t\treturn Vector2(sign(delta.x), 0)
+\telif abs(delta.y) > TOUCH_AXIS_DEADZONE:
+\t\treturn Vector2(0, sign(delta.y))
+\treturn Vector2()
+'''
+    if ready_marker not in text:
+        raise RuntimeError("Função _ready do Player não encontrada")
+    text = text.replace(ready_marker, ready_replacement, 1)
+
+    direction_marker = '''\tdirection = Vector2()
+\t
+\tif not animationCommit: #if the playing is currently doing an animation, they cannot move or turn
+\t\tif Input.is_action_pressed("ui_up"):
+\t\t\tdirection.y = -1
+\t\telif Input.is_action_pressed("ui_down"):
+\t\t\tdirection.y = 1
+\t\t#if the player is holding shift, they are swapping between items in their inventory, not trying to move
+\t\tif Input.is_action_pressed("ui_right") and not Input.is_action_pressed("shift_right_arrow"):
+\t\t\tdirection.x = 1
+\t\telif Input.is_action_pressed("ui_left") and not Input.is_action_pressed("shift_left_arrow"):
+\t\t\tdirection.x = -1
+'''
+    direction_replacement = '''\tdirection = Vector2()
+\t
+\tif not animationCommit: #if the playing is currently doing an animation, they cannot move or turn
+\t\tvar keyboard_direction = Vector2()
+\t\tif Input.is_action_pressed("ui_up"):
+\t\t\tkeyboard_direction.y = -1
+\t\telif Input.is_action_pressed("ui_down"):
+\t\t\tkeyboard_direction.y = 1
+\t\t#if the player is holding shift, they are swapping between items in their inventory, not trying to move
+\t\tif Input.is_action_pressed("ui_right") and not Input.is_action_pressed("shift_right_arrow"):
+\t\t\tkeyboard_direction.x = 1
+\t\telif Input.is_action_pressed("ui_left") and not Input.is_action_pressed("shift_left_arrow"):
+\t\t\tkeyboard_direction.x = -1
+\t\tif keyboard_direction != Vector2():
+\t\t\t_cancel_touch_destination()
+\t\t\tdirection = keyboard_direction
+\t\telif not is_moving:
+\t\t\tdirection = _touch_direction()
+'''
+    if direction_marker not in text:
+        raise RuntimeError("Bloco de direção do Player não encontrado")
+    text = text.replace(direction_marker, direction_replacement, 1)
+
+    blocked_marker = '''\tif not is_moving and direction != Vector2() and not Inventory.visible:
+\t\ttarget_direction = direction
+\t\tif Zone.is_cell_vacant(position, target_direction):
+'''
+    blocked_replacement = '''\tif not is_moving and direction != Vector2() and not Inventory.visible:
+\t\ttarget_direction = direction
+\t\tif Zone.is_cell_vacant(position, target_direction):
+'''
+    if blocked_marker not in text:
+        raise RuntimeError("Bloco de início do movimento não encontrado")
+    text = text.replace(blocked_marker, blocked_replacement, 1)
+
+    # Quando a próxima célula está bloqueada, interromper a navegação automática
+    # para que o personagem não fique tentando caminhar eternamente contra o obstáculo.
+    next_marker = '''\t\t\tif Zone.is_cell_vacant(position, target_direction):
+\t\t\t\ttarget_pos = Zone.update_child_pos(self)
+\t\t\t\tis_moving = true
+'''
+    next_replacement = '''\t\t\tif Zone.is_cell_vacant(position, target_direction):
+\t\t\t\ttarget_pos = Zone.update_child_pos(self)
+\t\t\t\tis_moving = true
+\t\t\telif has_touch_destination:
+\t\t\t\t_cancel_touch_destination()
+'''
+    if next_marker not in text:
+        raise RuntimeError("Validação de célula livre não encontrada")
+    text = text.replace(next_marker, next_replacement, 1)
+
+    player.write_text(text, encoding="utf-8")
+
+
 def configure_export(root: Path) -> None:
     (root / "export_presets.cfg").write_text(
         '''[preset.0]
@@ -245,7 +374,7 @@ vram_texture_compression/for_desktop=true
 vram_texture_compression/for_mobile=false
 html/export_icon=true
 html/custom_html_shell=""
-html/head_include=""
+html/head_include="<style>html,body{margin:0;overflow:hidden;background:#111;touch-action:none;overscroll-behavior:none}canvas{touch-action:none}</style>"
 html/canvas_resize_policy=2
 html/focus_canvas_on_start=true
 html/experimental_virtual_keyboard=true
@@ -274,6 +403,7 @@ def main() -> None:
     configure_audio_references(root)
     configure_main_menu(root)
     configure_economy(root)
+    configure_mobile_touch(root)
     configure_export(root)
     print(f"AgroFarm Classic preparado em: {root}")
 
