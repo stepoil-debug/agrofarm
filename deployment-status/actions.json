@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-07-31T11:33:55Z",
+  "checked_at": "2026-08-01T08:39:30Z",
   "workflows": [
     {
       "id": 324419455,
@@ -21,7 +21,7 @@
     },
     {
       "id": 324415462,
-      "name": ".github/workflows/classic-deploy.yml",
+      "name": "Deploy AgroFarm Classic",
       "path": ".github/workflows/classic-deploy.yml",
       "state": "active"
     },
@@ -38,12 +38,6 @@
       "state": "active"
     },
     {
-      "id": 323230489,
-      "name": "Publicar AgroFarm 3D",
-      "path": ".github/workflows/pages.yml",
-      "state": "active"
-    },
-    {
       "id": 323948934,
       "name": "Unity 6 Build",
       "path": ".github/workflows/unity-build.yml",
@@ -52,43 +46,290 @@
   ],
   "recent_runs": [
     {
-      "id": 30627458352,
+      "id": 30692184567,
+      "name": "CI",
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "00d566bf25f6d0e8c3c510a65a579da29940c828",
+      "run_number": 206,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30692184567",
+      "created_at": "2026-08-01T08:39:14Z",
+      "updated_at": "2026-08-01T08:39:18Z"
+    },
+    {
+      "id": 30692184557,
       "name": "Diagnose AgroFarm Workflows",
       "path": ".github/workflows/actions-diagnostic.yml",
       "event": "push",
       "status": "in_progress",
       "conclusion": null,
+      "head_sha": "00d566bf25f6d0e8c3c510a65a579da29940c828",
+      "run_number": 2,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30692184557",
+      "created_at": "2026-08-01T08:39:14Z",
+      "updated_at": "2026-08-01T08:39:25Z"
+    },
+    {
+      "id": 30692173219,
+      "name": "Check AgroFarm Classic Deployment",
+      "path": ".github/workflows/classic-status.yml",
+      "event": "workflow_run",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "8472cb78d222c4531928b3cdec6a82c128e44ca1",
+      "run_number": 5,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30692173219",
+      "created_at": "2026-08-01T08:38:52Z",
+      "updated_at": "2026-08-01T08:39:04Z"
+    },
+    {
+      "id": 30692146909,
+      "name": "CI",
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "8472cb78d222c4531928b3cdec6a82c128e44ca1",
+      "run_number": 205,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30692146909",
+      "created_at": "2026-08-01T08:38:03Z",
+      "updated_at": "2026-08-01T08:38:45Z"
+    },
+    {
+      "id": 30692146905,
+      "name": "Deploy AgroFarm Classic",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "8472cb78d222c4531928b3cdec6a82c128e44ca1",
+      "run_number": 9,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30692146905",
+      "created_at": "2026-08-01T08:38:03Z",
+      "updated_at": "2026-08-01T08:38:51Z"
+    },
+    {
+      "id": 30628087666,
+      "name": "Check AgroFarm Classic Deployment",
+      "path": ".github/workflows/classic-status.yml",
+      "event": "workflow_run",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "d621c78c079aa6fce125ed2022028c27a124f3e1",
+      "run_number": 4,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30628087666",
+      "created_at": "2026-07-31T11:44:22Z",
+      "updated_at": "2026-07-31T11:44:31Z"
+    },
+    {
+      "id": 30628006879,
+      "name": "CI",
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "d621c78c079aa6fce125ed2022028c27a124f3e1",
+      "run_number": 204,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30628006879",
+      "created_at": "2026-07-31T11:43:00Z",
+      "updated_at": "2026-07-31T11:43:41Z"
+    },
+    {
+      "id": 30628006845,
+      "name": "Deploy AgroFarm Classic",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "d621c78c079aa6fce125ed2022028c27a124f3e1",
+      "run_number": 8,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30628006845",
+      "created_at": "2026-07-31T11:43:00Z",
+      "updated_at": "2026-07-31T11:44:19Z"
+    },
+    {
+      "id": 30627866252,
+      "name": "Check AgroFarm Classic Deployment",
+      "path": ".github/workflows/classic-status.yml",
+      "event": "workflow_run",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5a189e657dea7c76607b5e7418d2254a5da8aa28",
+      "run_number": 3,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627866252",
+      "created_at": "2026-07-31T11:40:36Z",
+      "updated_at": "2026-07-31T11:40:51Z"
+    },
+    {
+      "id": 30627778550,
+      "name": "CI",
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5a189e657dea7c76607b5e7418d2254a5da8aa28",
+      "run_number": 203,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627778550",
+      "created_at": "2026-07-31T11:39:08Z",
+      "updated_at": "2026-07-31T11:39:57Z"
+    },
+    {
+      "id": 30627778483,
+      "name": "Deploy AgroFarm Classic",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "5a189e657dea7c76607b5e7418d2254a5da8aa28",
+      "run_number": 7,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627778483",
+      "created_at": "2026-07-31T11:39:08Z",
+      "updated_at": "2026-07-31T11:40:34Z"
+    },
+    {
+      "id": 30627670176,
+      "name": "Check AgroFarm Classic Deployment",
+      "path": ".github/workflows/classic-status.yml",
+      "event": "workflow_run",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "173308e16280e84198b1bccd8e15a9631564cc1f",
+      "run_number": 2,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627670176",
+      "created_at": "2026-07-31T11:37:19Z",
+      "updated_at": "2026-07-31T11:37:30Z"
+    },
+    {
+      "id": 30627641798,
+      "name": "Deploy AgroFarm Classic",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "173308e16280e84198b1bccd8e15a9631564cc1f",
+      "run_number": 6,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627641798",
+      "created_at": "2026-07-31T11:36:50Z",
+      "updated_at": "2026-07-31T11:37:17Z"
+    },
+    {
+      "id": 30627641779,
+      "name": "CI",
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "173308e16280e84198b1bccd8e15a9631564cc1f",
+      "run_number": 202,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627641779",
+      "created_at": "2026-07-31T11:36:50Z",
+      "updated_at": "2026-07-31T11:37:34Z"
+    },
+    {
+      "id": 30627602405,
+      "name": "CI",
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "4726f9ae48094c6d562b3ca9868e9f807464145c",
+      "run_number": 201,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627602405",
+      "created_at": "2026-07-31T11:36:10Z",
+      "updated_at": "2026-07-31T11:36:52Z"
+    },
+    {
+      "id": 30627601427,
+      "name": ".github/workflows/classic-deploy.yml",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "4726f9ae48094c6d562b3ca9868e9f807464145c",
+      "run_number": 5,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627601427",
+      "created_at": "2026-07-31T11:36:09Z",
+      "updated_at": "2026-07-31T11:36:09Z"
+    },
+    {
+      "id": 30627563975,
+      "name": "CI",
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "17220a4be86b1f2d8307e6110a40b53a2d821991",
+      "run_number": 200,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627563975",
+      "created_at": "2026-07-31T11:35:30Z",
+      "updated_at": "2026-07-31T11:36:22Z"
+    },
+    {
+      "id": 30627563959,
+      "name": "Publicar AgroFarm 3D",
+      "path": ".github/workflows/pages.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "17220a4be86b1f2d8307e6110a40b53a2d821991",
+      "run_number": 22,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627563959",
+      "created_at": "2026-07-31T11:35:30Z",
+      "updated_at": "2026-07-31T11:36:30Z"
+    },
+    {
+      "id": 30627563326,
+      "name": ".github/workflows/classic-deploy.yml",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "17220a4be86b1f2d8307e6110a40b53a2d821991",
+      "run_number": 4,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627563326",
+      "created_at": "2026-07-31T11:35:29Z",
+      "updated_at": "2026-07-31T11:35:29Z"
+    },
+    {
+      "id": 30627458352,
+      "name": "Diagnose AgroFarm Workflows",
+      "path": ".github/workflows/actions-diagnostic.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
       "head_sha": "9303ce73bd351e046572ff08e70eae8d2886f252",
       "run_number": 1,
       "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627458352",
       "created_at": "2026-07-31T11:33:43Z",
-      "updated_at": "2026-07-31T11:33:52Z"
+      "updated_at": "2026-07-31T11:33:59Z"
     },
     {
       "id": 30627457968,
       "name": "Publicar AgroFarm 3D",
       "path": ".github/workflows/pages.yml",
       "event": "push",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "head_sha": "9303ce73bd351e046572ff08e70eae8d2886f252",
       "run_number": 21,
       "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627457968",
       "created_at": "2026-07-31T11:33:43Z",
-      "updated_at": "2026-07-31T11:33:46Z"
+      "updated_at": "2026-07-31T11:34:42Z"
     },
     {
       "id": 30627457910,
       "name": "CI",
       "path": ".github/workflows/ci.yml",
       "event": "push",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "head_sha": "9303ce73bd351e046572ff08e70eae8d2886f252",
       "run_number": 199,
       "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627457910",
       "created_at": "2026-07-31T11:33:43Z",
-      "updated_at": "2026-07-31T11:33:46Z"
+      "updated_at": "2026-07-31T11:34:24Z"
     },
     {
       "id": 30627456878,
@@ -193,256 +434,87 @@
       "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627013130",
       "created_at": "2026-07-31T11:26:08Z",
       "updated_at": "2026-07-31T11:26:08Z"
-    },
-    {
-      "id": 30568998692,
-      "name": "Unity 6 Build",
-      "path": ".github/workflows/unity-build.yml",
-      "event": "pull_request",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "8dfadaddbb4c4949dba7c3ce185ff40fe1b3cdd0",
-      "run_number": 1,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568998692",
-      "created_at": "2026-07-30T18:07:02Z",
-      "updated_at": "2026-07-30T18:07:09Z"
-    },
-    {
-      "id": 30568998620,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "pull_request",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "8dfadaddbb4c4949dba7c3ce185ff40fe1b3cdd0",
-      "run_number": 196,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568998620",
-      "created_at": "2026-07-30T18:07:02Z",
-      "updated_at": "2026-07-30T18:07:51Z"
-    },
-    {
-      "id": 30568954443,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "8dfadaddbb4c4949dba7c3ce185ff40fe1b3cdd0",
-      "run_number": 195,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568954443",
-      "created_at": "2026-07-30T18:06:23Z",
-      "updated_at": "2026-07-30T18:07:21Z"
-    },
-    {
-      "id": 30568902955,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "d5e18799c384e77de5afccc57cb2f4b38e5c083c",
-      "run_number": 194,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568902955",
-      "created_at": "2026-07-30T18:05:42Z",
-      "updated_at": "2026-07-30T18:06:57Z"
-    },
-    {
-      "id": 30568862634,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "fc163acccbb326a9661439d8616887fbd7ff43f1",
-      "run_number": 193,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568862634",
-      "created_at": "2026-07-30T18:05:08Z",
-      "updated_at": "2026-07-30T18:05:55Z"
-    },
-    {
-      "id": 30568807090,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "32953e8a0b5a10229dbb3c8b1585746706266a11",
-      "run_number": 192,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568807090",
-      "created_at": "2026-07-30T18:04:26Z",
-      "updated_at": "2026-07-30T18:05:14Z"
-    },
-    {
-      "id": 30568738187,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "3e27f04905047e652fc562fa91cfec9bebdeb0d0",
-      "run_number": 191,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568738187",
-      "created_at": "2026-07-30T18:03:32Z",
-      "updated_at": "2026-07-30T18:04:25Z"
-    },
-    {
-      "id": 30568504838,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "8c0b5fa604eca65cf869f373a60b37f021b5883d",
-      "run_number": 190,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568504838",
-      "created_at": "2026-07-30T18:00:27Z",
-      "updated_at": "2026-07-30T18:01:14Z"
-    },
-    {
-      "id": 30568410829,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "664012fba9461bf1552fe35f14b6404717c38d39",
-      "run_number": 189,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568410829",
-      "created_at": "2026-07-30T17:59:16Z",
-      "updated_at": "2026-07-30T18:00:03Z"
-    },
-    {
-      "id": 30568351407,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "1d2e1dd569f9f7a4df0aaa5e66f7056541250c27",
-      "run_number": 188,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568351407",
-      "created_at": "2026-07-30T17:58:27Z",
-      "updated_at": "2026-07-30T17:59:09Z"
-    },
-    {
-      "id": 30568327944,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "b80174e5df125a31744721846185bbb950803c3f",
-      "run_number": 187,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568327944",
-      "created_at": "2026-07-30T17:58:07Z",
-      "updated_at": "2026-07-30T17:58:59Z"
-    },
-    {
-      "id": 30568274909,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "c6464f8e938d922eee6ce84247d24920a31c5a10",
-      "run_number": 186,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568274909",
-      "created_at": "2026-07-30T17:57:24Z",
-      "updated_at": "2026-07-30T17:58:07Z"
-    },
-    {
-      "id": 30568168290,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "86d42a5b961b65d507609c84a01fcbdefbc63828",
-      "run_number": 185,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568168290",
-      "created_at": "2026-07-30T17:55:57Z",
-      "updated_at": "2026-07-30T17:56:38Z"
-    },
-    {
-      "id": 30568145896,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "dfe119c54a5b3568d8a8a8fd89b685656c0dc3fd",
-      "run_number": 184,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568145896",
-      "created_at": "2026-07-30T17:55:39Z",
-      "updated_at": "2026-07-30T17:56:32Z"
-    },
-    {
-      "id": 30568094713,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "94ea623a778f04bd901e3ba822f5d7cd0bb97ee8",
-      "run_number": 183,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568094713",
-      "created_at": "2026-07-30T17:55:00Z",
-      "updated_at": "2026-07-30T17:55:54Z"
-    },
-    {
-      "id": 30568065378,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "dfb3439d33837f5df9eb0b848f41900733cd6e36",
-      "run_number": 182,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568065378",
-      "created_at": "2026-07-30T17:54:35Z",
-      "updated_at": "2026-07-30T17:55:25Z"
-    },
-    {
-      "id": 30568036923,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "1ccd33ef0a6aa3a582fc0083fecaab3b0772883c",
-      "run_number": 181,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30568036923",
-      "created_at": "2026-07-30T17:54:13Z",
-      "updated_at": "2026-07-30T17:54:55Z"
-    },
-    {
-      "id": 30567963057,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "07546441aa87e741353dd7d01ee36805ad81fdcb",
-      "run_number": 180,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30567963057",
-      "created_at": "2026-07-30T17:53:14Z",
-      "updated_at": "2026-07-30T17:54:07Z"
-    },
-    {
-      "id": 30567923483,
-      "name": "CI",
-      "path": ".github/workflows/ci.yml",
-      "event": "push",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "a4ec57350662bd1cdedcc1cf01d25084185177a5",
-      "run_number": 179,
-      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30567923483",
-      "created_at": "2026-07-30T17:52:43Z",
-      "updated_at": "2026-07-30T17:53:38Z"
     }
   ],
   "classic_runs": [
+    {
+      "id": 30692146905,
+      "name": "Deploy AgroFarm Classic",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "8472cb78d222c4531928b3cdec6a82c128e44ca1",
+      "run_number": 9,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30692146905",
+      "created_at": "2026-08-01T08:38:03Z",
+      "updated_at": "2026-08-01T08:38:51Z"
+    },
+    {
+      "id": 30628006845,
+      "name": "Deploy AgroFarm Classic",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "d621c78c079aa6fce125ed2022028c27a124f3e1",
+      "run_number": 8,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30628006845",
+      "created_at": "2026-07-31T11:43:00Z",
+      "updated_at": "2026-07-31T11:44:19Z"
+    },
+    {
+      "id": 30627778483,
+      "name": "Deploy AgroFarm Classic",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "5a189e657dea7c76607b5e7418d2254a5da8aa28",
+      "run_number": 7,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627778483",
+      "created_at": "2026-07-31T11:39:08Z",
+      "updated_at": "2026-07-31T11:40:34Z"
+    },
+    {
+      "id": 30627641798,
+      "name": "Deploy AgroFarm Classic",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "173308e16280e84198b1bccd8e15a9631564cc1f",
+      "run_number": 6,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627641798",
+      "created_at": "2026-07-31T11:36:50Z",
+      "updated_at": "2026-07-31T11:37:17Z"
+    },
+    {
+      "id": 30627601427,
+      "name": ".github/workflows/classic-deploy.yml",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "4726f9ae48094c6d562b3ca9868e9f807464145c",
+      "run_number": 5,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627601427",
+      "created_at": "2026-07-31T11:36:09Z",
+      "updated_at": "2026-07-31T11:36:09Z"
+    },
+    {
+      "id": 30627563326,
+      "name": ".github/workflows/classic-deploy.yml",
+      "path": ".github/workflows/classic-deploy.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "17220a4be86b1f2d8307e6110a40b53a2d821991",
+      "run_number": 4,
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30627563326",
+      "created_at": "2026-07-31T11:35:29Z",
+      "updated_at": "2026-07-31T11:35:29Z"
+    },
     {
       "id": 30627456878,
       "name": ".github/workflows/classic-deploy.yml",
@@ -483,5 +555,107 @@
       "updated_at": "2026-07-31T11:26:08Z"
     }
   ],
-  "classic_jobs": []
+  "classic_jobs": [
+    {
+      "id": 91348636276,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30692146905/job/91348636276",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Baixar repositório AgroFarm",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Instalar FFmpeg",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Baixar base funcional",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Modelar base para o AgroFarm",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 6,
+          "name": "Restaurar cache dos efeitos sonoros",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 7,
+          "name": "Instalar Godot 3.6.2",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 8,
+          "name": "Instalar templates HTML5",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 9,
+          "name": "Importar e validar projeto",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 10,
+          "name": "Exportar jogo para navegador",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 11,
+          "name": "Configurar GitHub Pages",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 12,
+          "name": "Enviar jogo",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 24,
+          "name": "Post Baixar repositório AgroFarm",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "number": 25,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 91348702952,
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30692146905/job/91348702952",
+      "steps": []
+    }
+  ]
 }
