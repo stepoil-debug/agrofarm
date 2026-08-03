@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/classic-deploy.yml
       - scripts/prepare-classic.py
+      - scripts/mobile-farm-patch.py
   workflow_dispatch:
 
 permissions:
@@ -59,7 +60,9 @@ jobs:
               text = text[:start] + text[end:]
               path.write_text(text, encoding='utf-8')
           PY
-          python3 scripts/prepare-classic.py "/tmp/harvest-base/Harvest Moon 2.0"
+          PROJECT="/tmp/harvest-base/Harvest Moon 2.0"
+          python3 scripts/prepare-classic.py "$PROJECT"
+          python3 scripts/mobile-farm-patch.py "$PROJECT"
 
       - name: Restaurar cache dos efeitos sonoros
         run: |
