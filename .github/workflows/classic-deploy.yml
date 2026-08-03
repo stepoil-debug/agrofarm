@@ -8,6 +8,7 @@ on:
       - scripts/prepare-classic.py
       - scripts/mobile-farm-patch.py
       - scripts/mobile-legibility-patch.py
+      - scripts/mobile-legibility-postfix.py
   workflow_dispatch:
 
 permissions:
@@ -65,6 +66,7 @@ jobs:
           python3 scripts/prepare-classic.py "$PROJECT"
           python3 scripts/mobile-farm-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-patch.py "$PROJECT"
+          python3 scripts/mobile-legibility-postfix.py "$PROJECT"
 
       - name: Restaurar cache dos efeitos sonoros
         run: |
