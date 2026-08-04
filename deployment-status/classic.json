@@ -1,11 +1,11 @@
 {
-  "checked_at": "2026-08-03T20:30:11Z",
+  "checked_at": "2026-08-04T12:43:37Z",
   "workflow": {
-    "id": 30850313708,
+    "id": 30910235271,
     "status": "completed",
-    "conclusion": "success",
-    "url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30850313708",
-    "head_sha": "2e89a23e83d1f3d302a1c684438075b61ee317fc"
+    "conclusion": "failure",
+    "url": "https://github.com/stepoil-debug/agrofarm/actions/runs/30910235271",
+    "head_sha": "5142bf636cb233ccc242a96c12cfbeae08f33ef5"
   },
   "site": {
     "url": "https://stepoil-debug.github.io/agrofarm/",
