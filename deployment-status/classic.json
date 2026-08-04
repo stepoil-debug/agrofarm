@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-08-04T10:23:27-03:00",
+  "checked_at": "2026-08-04T13:27:40Z",
   "workflow": {
     "id": 30913581580,
     "status": "completed",
@@ -9,7 +9,7 @@
   },
   "site": {
     "url": "https://stepoil-debug.github.io/agrofarm/",
-    "http_code": 200,
+    "http_code": "200",
     "title": "AgroFarm Classic",
     "contains_godot_export": true,
     "contains_agrofarm_classic": true
