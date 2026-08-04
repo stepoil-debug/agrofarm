@@ -24,19 +24,29 @@ var energy = 100
 var unlocked_plots = INITIAL_PLOTS
 var plots = []
 var animals = []
+var player_name = ""
+var gender = "masculino"
+var profile_created = false
+
 var structures = {
-    "coop": {"name": "Galinheiro", "cost": 500, "owned": false, "emoji": "🐔"},
-    "stable": {"name": "Estábulo", "cost": 1200, "owned": false, "emoji": "🐄"},
-    "pigsty": {"name": "Chiqueiro", "cost": 800, "owned": false, "emoji": "🐷"},
-    "silo": {"name": "Silo", "cost": 350, "owned": false, "emoji": "🌾"},
-    "barn": {"name": "Galpão", "cost": 700, "owned": false, "emoji": "🏚️"}
+    "coop": {"name": "Galinheiro", "cost": 500, "owned": false},
+    "stable": {"name": "Estabulo", "cost": 1200, "owned": false},
+    "pigsty": {"name": "Chiqueiro", "cost": 800, "owned": false},
+    "silo": {"name": "Silo", "cost": 350, "owned": false},
+    "barn": {"name": "Galpao", "cost": 700, "owned": false}
 }
 
+var start_screen
+var game_screen
+var name_input
+var male_button
+var female_button
 var money_label
 var day_label
 var energy_label
 var title_label
 var mini_map
+var plot_grid
 var menu_panel
 var content_panel
 var toast_label
@@ -45,7 +55,12 @@ func _ready():
     rect_min_size = Vector2(960, 540)
     _init_plots()
     _load_game()
-    _build_ui()
+    _build_start_screen()
+    _build_game_screen()
+    if profile_created:
+        _show_game()
+    else:
+        _show_start()
     _refresh_all()
 
 func _init_plots():
@@ -53,190 +68,377 @@ func _init_plots():
     for i in range(MAX_PLOTS):
         plots.append({"unlocked": i < unlocked_plots, "crop": "", "stage": 0, "max_stage": 3, "watered": false, "pest": false})
 
-func _build_ui():
+func _button(text, min_size=Vector2(160, 52)):
+    var b = Button.new()
+    b.text = text
+    b.rect_min_size = min_size
+    return b
+
+func _label(text, size=Vector2(200, 30), center=true):
+    var l = Label.new()
+    l.text = text
+    l.rect_min_size = size
+    if center:
+        l.align = Label.ALIGN_CENTER
+        l.valign = Label.VALIGN_CENTER
+    return l
+
+func _build_start_screen():
+    start_screen = Control.new()
+    start_screen.name = "StartScreen"
+    start_screen.anchor_right = 1
+    start_screen.anchor_bottom = 1
+    add_child(start_screen)
+
     var bg = ColorRect.new()
-    bg.color = Color(0.08, 0.27, 0.10, 1)
+    bg.color = Color(0.04, 0.18, 0.08, 1)
     bg.anchor_right = 1
     bg.anchor_bottom = 1
-    add_child(bg)
+    start_screen.add_child(bg)
+
+    var sky = ColorRect.new()
+    sky.color = Color(0.24, 0.54, 0.88, 1)
+    sky.anchor_right = 1
+    sky.anchor_bottom = 0.42
+    start_screen.add_child(sky)
+
+    var field = ColorRect.new()
+    field.color = Color(0.12, 0.42, 0.12, 1)
+    field.anchor_top = 0.42
+    field.anchor_right = 1
+    field.anchor_bottom = 1
+    start_screen.add_child(field)
+
+    var title = Label.new()
+    title.text = "AGRO FARM"
+    title.anchor_left = 0.07
+    title.anchor_top = 0.06
+    title.anchor_right = 0.93
+    title.anchor_bottom = 0.20
+    title.align = Label.ALIGN_CENTER
+    title.valign = Label.VALIGN_CENTER
+    start_screen.add_child(title)
+
+    var subtitle = Label.new()
+    subtitle.text = "O JOGO DO PRODUTOR BRASILEIRO"
+    subtitle.anchor_left = 0.07
+    subtitle.anchor_top = 0.18
+    subtitle.anchor_right = 0.93
+    subtitle.anchor_bottom = 0.26
+    subtitle.align = Label.ALIGN_CENTER
+    subtitle.valign = Label.VALIGN_CENTER
+    start_screen.add_child(subtitle)
+
+    var setup = Panel.new()
+    setup.anchor_left = 0.09
+    setup.anchor_top = 0.30
+    setup.anchor_right = 0.91
+    setup.anchor_bottom = 0.92
+    start_screen.add_child(setup)
+
+    var box = VBoxContainer.new()
+    box.anchor_left = 0.05
+    box.anchor_top = 0.06
+    box.anchor_right = 0.95
+    box.anchor_bottom = 0.94
+    box.add_constant_override("separation", 10)
+    setup.add_child(box)
+
+    var name_label = _label("Nome do personagem", Vector2(0, 30))
+    box.add_child(name_label)
+
+    name_input = LineEdit.new()
+    name_input.placeholder_text = "Digite o nome do produtor"
+    name_input.text = player_name
+    name_input.max_length = 18
+    name_input.rect_min_size = Vector2(0, 44)
+    box.add_child(name_input)
+
+    var choose = _label("Escolha o personagem", Vector2(0, 30))
+    box.add_child(choose)
+
+    var choices = HBoxContainer.new()
+    choices.alignment = BoxContainer.ALIGN_CENTER
+    choices.add_constant_override("separation", 16)
+    choices.rect_min_size = Vector2(0, 120)
+    box.add_child(choices)
+
+    male_button = _button("MASCULINO\nProdutor", Vector2(210, 105))
+    male_button.connect("pressed", self, "_select_gender", ["masculino"])
+    choices.add_child(male_button)
+
+    female_button = _button("FEMININO\nProdutora", Vector2(210, 105))
+    female_button.connect("pressed", self, "_select_gender", ["feminino"])
+    choices.add_child(female_button)
+
+    var start = _button("COMEÇAR FAZENDA", Vector2(0, 54))
+    start.connect("pressed", self, "_start_game")
+    box.add_child(start)
+
+    _update_gender_buttons()
+
+func _build_game_screen():
+    game_screen = Control.new()
+    game_screen.name = "GameScreen"
+    game_screen.anchor_right = 1
+    game_screen.anchor_bottom = 1
+    add_child(game_screen)
+
+    var bg = ColorRect.new()
+    bg.color = Color(0.10, 0.31, 0.11, 1)
+    bg.anchor_right = 1
+    bg.anchor_bottom = 1
+    game_screen.add_child(bg)
+
+    var road = ColorRect.new()
+    road.color = Color(0.88, 0.71, 0.33, 1)
+    road.anchor_left = 0.26
+    road.anchor_top = 0.08
+    road.anchor_right = 0.32
+    road.anchor_bottom = 0.82
+    game_screen.add_child(road)
+
+    var road2 = ColorRect.new()
+    road2.color = Color(0.88, 0.71, 0.33, 1)
+    road2.anchor_left = 0.30
+    road2.anchor_top = 0.57
+    road2.anchor_right = 0.92
+    road2.anchor_bottom = 0.66
+    game_screen.add_child(road2)
 
     var top = Panel.new()
-    top.name = "TopBar"
     top.anchor_right = 1
-    top.margin_bottom = 62
-    add_child(top)
+    top.margin_bottom = 64
+    game_screen.add_child(top)
 
-    money_label = Label.new()
-    money_label.margin_left = 12
-    money_label.margin_top = 8
-    money_label.margin_right = 210
-    money_label.margin_bottom = 32
-    top.add_child(money_label)
+    var map_btn = _button("MAPA", Vector2(130, 52))
+    map_btn.anchor_left = 0.02
+    map_btn.anchor_top = 0.10
+    map_btn.anchor_right = 0.16
+    map_btn.anchor_bottom = 0.90
+    map_btn.connect("pressed", self, "_open_map")
+    top.add_child(map_btn)
 
-    day_label = Label.new()
-    day_label.margin_left = 12
-    day_label.margin_top = 34
-    day_label.margin_right = 210
-    day_label.margin_bottom = 58
-    top.add_child(day_label)
+    title_label = Label.new()
+    title_label.anchor_left = 0.28
+    title_label.anchor_right = 0.72
+    title_label.anchor_top = 0.02
+    title_label.anchor_bottom = 0.98
+    title_label.align = Label.ALIGN_CENTER
+    title_label.valign = Label.VALIGN_CENTER
+    top.add_child(title_label)
 
-    energy_label = Label.new()
-    energy_label.anchor_left = 0.38
-    energy_label.anchor_right = 0.68
-    energy_label.margin_top = 18
-    energy_label.margin_bottom = 48
-    energy_label.align = Label.ALIGN_CENTER
-    top.add_child(energy_label)
-
-    var menu_btn = Button.new()
-    menu_btn.text = "☰ MENU"
-    menu_btn.anchor_left = 0.84
-    menu_btn.anchor_top = 0.12
+    var menu_btn = _button("MENU", Vector2(130, 52))
+    menu_btn.anchor_left = 0.82
+    menu_btn.anchor_top = 0.10
     menu_btn.anchor_right = 0.98
-    menu_btn.anchor_bottom = 0.88
+    menu_btn.anchor_bottom = 0.90
     menu_btn.connect("pressed", self, "_toggle_menu")
     top.add_child(menu_btn)
 
-    title_label = Label.new()
-    title_label.anchor_left = 0.5
-    title_label.anchor_top = 0.17
-    title_label.anchor_right = 0.5
-    title_label.anchor_bottom = 0.17
-    title_label.margin_left = -320
-    title_label.margin_top = -20
-    title_label.margin_right = 320
-    title_label.margin_bottom = 28
-    title_label.align = Label.ALIGN_CENTER
-    title_label.valign = Label.VALIGN_CENTER
-    title_label.text = "🌾 AGRO FARM MOBILE"
-    add_child(title_label)
-
-    var hint = Label.new()
-    hint.anchor_left = 0.5
-    hint.anchor_top = 0.28
-    hint.anchor_right = 0.5
-    hint.anchor_bottom = 0.28
-    hint.margin_left = -360
-    hint.margin_top = -20
-    hint.margin_right = 360
-    hint.margin_bottom = 44
-    hint.align = Label.ALIGN_CENTER
-    hint.valign = Label.VALIGN_CENTER
-    hint.text = "Comece com 4 lotes. Compre expansões, construções e animais."
-    add_child(hint)
-
     mini_map = Panel.new()
-    mini_map.anchor_left = 0.78
+    mini_map.name = "MiniMap"
+    mini_map.anchor_left = 0.02
     mini_map.anchor_top = 0.14
-    mini_map.anchor_right = 0.98
-    mini_map.anchor_bottom = 0.40
-    add_child(mini_map)
+    mini_map.anchor_right = 0.25
+    mini_map.anchor_bottom = 0.44
+    game_screen.add_child(mini_map)
     _build_mini_map_contents()
 
+    plot_grid = GridContainer.new()
+    plot_grid.columns = 6
+    plot_grid.anchor_left = 0.30
+    plot_grid.anchor_top = 0.18
+    plot_grid.anchor_right = 0.94
+    plot_grid.anchor_bottom = 0.76
+    plot_grid.add_constant_override("hseparation", 8)
+    plot_grid.add_constant_override("vseparation", 8)
+    game_screen.add_child(plot_grid)
+
     var actions = HBoxContainer.new()
-    actions.anchor_left = 0.18
+    actions.anchor_left = 0.20
     actions.anchor_top = 0.84
-    actions.anchor_right = 0.82
+    actions.anchor_right = 0.86
     actions.anchor_bottom = 0.97
     actions.alignment = BoxContainer.ALIGN_CENTER
     actions.add_constant_override("separation", 12)
-    add_child(actions)
-    _add_action_button(actions, "🌾 LOTES", "_open_lots")
-    _add_action_button(actions, "🏗️ CONSTRUIR", "_open_structures")
-    _add_action_button(actions, "🐄 ANIMAIS", "_open_animals")
-    _add_action_button(actions, "🌙 DORMIR", "_sleep_day")
+    game_screen.add_child(actions)
+    _add_action_button(actions, "LOTES", "_open_lots")
+    _add_action_button(actions, "CONSTRUIR", "_open_structures")
+    _add_action_button(actions, "ANIMAIS", "_open_animals")
+    _add_action_button(actions, "DORMIR", "_sleep_day")
+
+    money_label = Label.new()
+    money_label.anchor_left = 0.02
+    money_label.anchor_top = 0.78
+    money_label.anchor_right = 0.26
+    money_label.anchor_bottom = 0.84
+    money_label.align = Label.ALIGN_CENTER
+    game_screen.add_child(money_label)
+
+    day_label = Label.new()
+    day_label.anchor_left = 0.02
+    day_label.anchor_top = 0.84
+    day_label.anchor_right = 0.26
+    day_label.anchor_bottom = 0.90
+    day_label.align = Label.ALIGN_CENTER
+    game_screen.add_child(day_label)
+
+    energy_label = Label.new()
+    energy_label.anchor_left = 0.02
+    energy_label.anchor_top = 0.90
+    energy_label.anchor_right = 0.26
+    energy_label.anchor_bottom = 0.96
+    energy_label.align = Label.ALIGN_CENTER
+    game_screen.add_child(energy_label)
 
     menu_panel = Panel.new()
-    menu_panel.anchor_left = 0.22
+    menu_panel.anchor_left = 0.62
     menu_panel.anchor_top = 0.12
-    menu_panel.anchor_right = 0.78
-    menu_panel.anchor_bottom = 0.86
+    menu_panel.anchor_right = 0.96
+    menu_panel.anchor_bottom = 0.80
     menu_panel.visible = false
-    add_child(menu_panel)
-
-    var menu_box = VBoxContainer.new()
-    menu_box.anchor_left = 0.06
-    menu_box.anchor_top = 0.06
-    menu_box.anchor_right = 0.94
-    menu_box.anchor_bottom = 0.94
-    menu_box.add_constant_override("separation", 10)
-    menu_panel.add_child(menu_box)
-    _add_menu_button(menu_box, "🌾 LOTES", "_open_lots")
-    _add_menu_button(menu_box, "🏗️ CONSTRUÇÕES", "_open_structures")
-    _add_menu_button(menu_box, "🐄 ANIMAIS", "_open_animals")
-    _add_menu_button(menu_box, "🗺️ MAPA", "_open_map")
-    _add_menu_button(menu_box, "💾 SALVAR", "_save_game")
-    _add_menu_button(menu_box, "FECHAR", "_close_panels")
+    game_screen.add_child(menu_panel)
+    _build_menu_panel()
 
     content_panel = Panel.new()
-    content_panel.anchor_left = 0.06
+    content_panel.anchor_left = 0.08
     content_panel.anchor_top = 0.10
-    content_panel.anchor_right = 0.94
+    content_panel.anchor_right = 0.92
     content_panel.anchor_bottom = 0.82
     content_panel.visible = false
-    add_child(content_panel)
+    game_screen.add_child(content_panel)
 
     toast_label = Label.new()
-    toast_label.anchor_left = 0.18
-    toast_label.anchor_top = 0.73
-    toast_label.anchor_right = 0.82
+    toast_label.anchor_left = 0.22
+    toast_label.anchor_top = 0.72
+    toast_label.anchor_right = 0.86
     toast_label.anchor_bottom = 0.82
     toast_label.align = Label.ALIGN_CENTER
     toast_label.valign = Label.VALIGN_CENTER
     toast_label.visible = false
-    add_child(toast_label)
+    game_screen.add_child(toast_label)
 
 func _add_action_button(parent, text, method):
-    var b = Button.new()
-    b.text = text
-    b.rect_min_size = Vector2(150, 58)
+    var b = _button(text, Vector2(150, 58))
     b.connect("pressed", self, method)
     parent.add_child(b)
 
+func _build_menu_panel():
+    var box = VBoxContainer.new()
+    box.anchor_left = 0.06
+    box.anchor_top = 0.06
+    box.anchor_right = 0.94
+    box.anchor_bottom = 0.94
+    box.add_constant_override("separation", 10)
+    menu_panel.add_child(box)
+    _add_menu_button(box, "LOTES", "_open_lots")
+    _add_menu_button(box, "CONSTRUCOES", "_open_structures")
+    _add_menu_button(box, "ANIMAIS", "_open_animals")
+    _add_menu_button(box, "MAPA", "_open_map")
+    _add_menu_button(box, "SALVAR", "_save_game")
+    _add_menu_button(box, "TROCAR PERSONAGEM", "_back_to_start")
+    _add_menu_button(box, "FECHAR", "_close_panels")
+
 func _add_menu_button(parent, text, method):
-    var b = Button.new()
-    b.text = text
-    b.rect_min_size = Vector2(0, 46)
+    var b = _button(text, Vector2(0, 44))
     b.connect("pressed", self, method)
     parent.add_child(b)
 
 func _build_mini_map_contents():
-    var farm = Label.new()
-    farm.text = "🌾 FAZENDA"
-    farm.anchor_left = 0.05
-    farm.anchor_top = 0.10
-    farm.anchor_right = 0.95
-    farm.anchor_bottom = 0.35
-    farm.align = Label.ALIGN_CENTER
+    _clear_children(mini_map)
+    var bg = ColorRect.new()
+    bg.color = Color(0.02, 0.10, 0.04, 1)
+    bg.anchor_right = 1
+    bg.anchor_bottom = 1
+    mini_map.add_child(bg)
+
+    _rect(mini_map, 0.08, 0.10, 0.58, 0.58, Color(0.14, 0.45, 0.15, 1))
+    _rect(mini_map, 0.59, 0.10, 0.70, 0.90, Color(0.86, 0.70, 0.32, 1))
+    _rect(mini_map, 0.10, 0.62, 0.92, 0.72, Color(0.86, 0.70, 0.32, 1))
+    _rect(mini_map, 0.73, 0.18, 0.94, 0.48, Color(0.20, 0.20, 0.36, 1))
+
+    var farm = _label("CAMPO", Vector2(80, 20))
+    farm.anchor_left = 0.10
+    farm.anchor_top = 0.12
+    farm.anchor_right = 0.55
+    farm.anchor_bottom = 0.28
     mini_map.add_child(farm)
-    var road = Label.new()
-    road.text = "┃  ESTRADA"
-    road.anchor_left = 0.05
-    road.anchor_top = 0.38
-    road.anchor_right = 0.95
-    road.anchor_bottom = 0.60
-    road.align = Label.ALIGN_CENTER
-    mini_map.add_child(road)
-    var city = Label.new()
-    city.text = "🏙️ CIDADE"
-    city.anchor_left = 0.05
-    city.anchor_top = 0.66
-    city.anchor_right = 0.95
-    city.anchor_bottom = 0.90
-    city.align = Label.ALIGN_CENTER
+
+    var city = _label("LOJA", Vector2(80, 20))
+    city.anchor_left = 0.72
+    city.anchor_top = 0.20
+    city.anchor_right = 0.96
+    city.anchor_bottom = 0.36
     mini_map.add_child(city)
+
+    var player = _label("EU", Vector2(34, 22))
+    player.anchor_left = 0.34
+    player.anchor_top = 0.44
+    player.anchor_right = 0.50
+    player.anchor_bottom = 0.60
+    mini_map.add_child(player)
+
+func _rect(parent, l, t, r, b, color):
+    var cr = ColorRect.new()
+    cr.color = color
+    cr.anchor_left = l
+    cr.anchor_top = t
+    cr.anchor_right = r
+    cr.anchor_bottom = b
+    parent.add_child(cr)
+    return cr
 
 func _toggle_menu():
     menu_panel.visible = not menu_panel.visible
     content_panel.visible = false
 
+func _show_start():
+    start_screen.visible = true
+    game_screen.visible = false
+
+func _show_game():
+    start_screen.visible = false
+    game_screen.visible = true
+    _refresh_all()
+
+func _select_gender(value):
+    gender = value
+    _update_gender_buttons()
+
+func _update_gender_buttons():
+    if male_button == null or female_button == null:
+        return
+    male_button.text = ("[X] MASCULINO\nProdutor" if gender == "masculino" else "MASCULINO\nProdutor")
+    female_button.text = ("[X] FEMININO\nProdutora" if gender == "feminino" else "FEMININO\nProdutora")
+
+func _start_game():
+    var typed = name_input.text.strip_edges()
+    if typed == "":
+        _toast_start("Digite o nome do personagem")
+        return
+    player_name = typed
+    profile_created = true
+    _save_game(false)
+    _show_game()
+
+func _back_to_start():
+    _close_panels()
+    if name_input != null:
+        name_input.text = player_name
+    _show_start()
+
 func _close_panels():
     menu_panel.visible = false
     content_panel.visible = false
 
-func _clear_content():
-    for c in content_panel.get_children():
+func _clear_children(node):
+    for c in node.get_children():
+        node.remove_child(c)
         c.queue_free()
+
+func _clear_content():
+    _clear_children(content_panel)
     content_panel.visible = true
     menu_panel.visible = false
 
@@ -249,48 +451,44 @@ func _open_lots():
     box.anchor_bottom = 0.96
     box.add_constant_override("separation", 8)
     content_panel.add_child(box)
-    var title = Label.new()
-    title.text = "🌾 LOTES DE PLANTAÇÃO — " + str(unlocked_plots) + "/" + str(MAX_PLOTS)
-    title.align = Label.ALIGN_CENTER
-    title.rect_min_size = Vector2(0, 34)
+    var title = _label("LOTES DE PLANTACAO - " + str(unlocked_plots) + "/" + str(MAX_PLOTS), Vector2(0, 34))
     box.add_child(title)
+    _build_plot_grid(box)
+    var expand = _button("EXPANDIR CAMPO  $" + str(_expand_price()), Vector2(0, 44))
+    expand.disabled = unlocked_plots >= MAX_PLOTS
+    expand.connect("pressed", self, "_expand_plot")
+    box.add_child(expand)
+
+func _build_plot_grid(parent):
     var grid = GridContainer.new()
     grid.columns = 6
     grid.rect_min_size = Vector2(0, 250)
     grid.add_constant_override("hseparation", 6)
     grid.add_constant_override("vseparation", 6)
-    box.add_child(grid)
+    parent.add_child(grid)
     for i in range(MAX_PLOTS):
-        var btn = Button.new()
-        btn.rect_min_size = Vector2(84, 42)
-        btn.text = _plot_text(i)
+        var btn = _button(_plot_text(i), Vector2(84, 42))
         btn.disabled = not plots[i]["unlocked"]
         btn.connect("pressed", self, "_plot_pressed", [i])
         grid.add_child(btn)
-    var expand = Button.new()
-    expand.text = "➕ EXPANDIR CAMPO  $" + str(_expand_price())
-    expand.disabled = unlocked_plots >= MAX_PLOTS
-    expand.rect_min_size = Vector2(0, 44)
-    expand.connect("pressed", self, "_expand_plot")
-    box.add_child(expand)
 
 func _plot_text(i):
     var p = plots[i]
     if not p["unlocked"]:
-        return "🔒 " + str(i + 1)
+        return "BLOQ " + str(i + 1)
     if p["crop"] == "":
-        return "🌱 " + str(i + 1)
+        return "VAZIO " + str(i + 1)
     if p["stage"] >= p["max_stage"]:
-        return "✅ " + p["crop"]
+        return "COLHER"
     var txt = str(int(float(p["stage"]) / float(p["max_stage"]) * 100)) + "%"
     if p["watered"]:
-        txt += "💧"
+        txt += " AGUA"
     return txt
 
 func _plot_pressed(i):
     var p = plots[i]
     if p["crop"] == "":
-        if _spend(8, "Semente de milho"):
+        if _spend(8, "Semente"):
             p["crop"] = "Milho"
             p["stage"] = 0
             p["watered"] = false
@@ -308,14 +506,14 @@ func _plot_pressed(i):
     _open_lots()
 
 func _expand_price():
-    return int(500 * pow(1.5, unlocked_plots - INITIAL_PLOTS))
+    return int(120 * pow(1.35, unlocked_plots - INITIAL_PLOTS))
 
 func _expand_plot():
     if unlocked_plots >= MAX_PLOTS:
-        _toast("Todos os lotes já foram liberados")
+        _toast("Todos os lotes ja foram liberados")
         return
     var price = _expand_price()
-    if _spend(price, "Expansão de campo"):
+    if _spend(price, "Expansao"):
         plots[unlocked_plots]["unlocked"] = true
         unlocked_plots += 1
         _toast("Novo lote liberado")
@@ -331,16 +529,10 @@ func _open_structures():
     box.anchor_bottom = 0.94
     box.add_constant_override("separation", 8)
     content_panel.add_child(box)
-    var title = Label.new()
-    title.text = "🏗️ CONSTRUÇÕES"
-    title.align = Label.ALIGN_CENTER
-    title.rect_min_size = Vector2(0, 38)
-    box.add_child(title)
+    box.add_child(_label("CONSTRUCOES", Vector2(0, 38)))
     for id in structures.keys():
         var s = structures[id]
-        var b = Button.new()
-        b.rect_min_size = Vector2(0, 45)
-        b.text = s["emoji"] + " " + s["name"] + ("  ✅" if s["owned"] else "  $" + str(s["cost"]))
+        var b = _button(s["name"] + ("  OK" if s["owned"] else "  $" + str(s["cost"])), Vector2(0, 45))
         b.disabled = s["owned"]
         b.connect("pressed", self, "_buy_structure", [id])
         box.add_child(b)
@@ -362,49 +554,57 @@ func _open_animals():
     box.anchor_bottom = 0.94
     box.add_constant_override("separation", 8)
     content_panel.add_child(box)
-    var title = Label.new()
-    title.text = "🐄 ANIMAIS — " + str(animals.size())
-    title.align = Label.ALIGN_CENTER
-    title.rect_min_size = Vector2(0, 38)
-    box.add_child(title)
-    _animal_button(box, "Galinha", 300, "coop", "🐔")
-    _animal_button(box, "Vaca", 1500, "stable", "🐄")
-    _animal_button(box, "Porco", 900, "pigsty", "🐷")
+    box.add_child(_label("ANIMAIS - " + str(animals.size()), Vector2(0, 38)))
+    _animal_button(box, "Galinha", 300, "coop")
+    _animal_button(box, "Vaca", 1500, "stable")
+    _animal_button(box, "Porco", 900, "pigsty")
     for a in animals:
-        var l = Label.new()
-        l.text = a["emoji"] + " " + a["name"] + " — produção diária"
-        l.rect_min_size = Vector2(0, 28)
-        box.add_child(l)
+        box.add_child(_label(a["name"] + " - producao diaria", Vector2(0, 28), false))
 
-func _animal_button(parent, name, price, required, emoji):
-    var b = Button.new()
-    b.rect_min_size = Vector2(0, 44)
+func _animal_button(parent, name, price, required):
+    var b = _button("", Vector2(0, 44))
     if not structures[required]["owned"]:
-        b.text = emoji + " " + name + " — precisa de " + structures[required]["name"]
+        b.text = name + " - precisa de " + structures[required]["name"]
         b.disabled = true
     else:
-        b.text = emoji + " Comprar " + name + "  $" + str(price)
-        b.connect("pressed", self, "_buy_animal", [name, price, emoji])
+        b.text = "Comprar " + name + "  $" + str(price)
+        b.connect("pressed", self, "_buy_animal", [name, price])
     parent.add_child(b)
 
-func _buy_animal(name, price, emoji):
+func _buy_animal(name, price):
     if _spend(price, "Animal: " + name):
-        animals.append({"name": name + " " + str(animals.size() + 1), "emoji": emoji})
+        animals.append({"name": name + " " + str(animals.size() + 1)})
         _toast(name + " comprado")
     _refresh_all()
     _open_animals()
 
 func _open_map():
     _clear_content()
-    var label = Label.new()
-    label.anchor_left = 0.05
-    label.anchor_top = 0.10
-    label.anchor_right = 0.95
-    label.anchor_bottom = 0.90
-    label.align = Label.ALIGN_CENTER
-    label.valign = Label.VALIGN_CENTER
-    label.text = "🗺️ MAPA DO MUNDO\n\n🌾 Fazenda  →  🛤️ Estrada  →  🏙️ Cidade\n\nPróximas áreas: 🌲 Floresta, ⛰️ Montanha, 🌊 Rio"
-    content_panel.add_child(label)
+    var big = Panel.new()
+    big.anchor_left = 0.05
+    big.anchor_top = 0.08
+    big.anchor_right = 0.95
+    big.anchor_bottom = 0.90
+    content_panel.add_child(big)
+    _build_big_map(big)
+
+func _build_big_map(parent):
+    _rect(parent, 0.04, 0.10, 0.54, 0.62, Color(0.14, 0.45, 0.15, 1))
+    _rect(parent, 0.55, 0.08, 0.65, 0.92, Color(0.86, 0.70, 0.32, 1))
+    _rect(parent, 0.07, 0.64, 0.92, 0.74, Color(0.86, 0.70, 0.32, 1))
+    _rect(parent, 0.68, 0.14, 0.95, 0.48, Color(0.20, 0.20, 0.36, 1))
+    _map_label(parent, "FAZENDA", 0.13, 0.20, 0.45, 0.30)
+    _map_label(parent, "LOJA / CIDADE", 0.70, 0.22, 0.94, 0.32)
+    _map_label(parent, player_name, 0.32, 0.47, 0.47, 0.55)
+    _map_label(parent, "RIO / FLORESTA EM BREVE", 0.13, 0.80, 0.72, 0.90)
+
+func _map_label(parent, text, l, t, r, b):
+    var lb = _label(text, Vector2(120, 24))
+    lb.anchor_left = l
+    lb.anchor_top = t
+    lb.anchor_right = r
+    lb.anchor_bottom = b
+    parent.add_child(lb)
 
 func _sleep_day():
     day += 1
@@ -416,7 +616,7 @@ func _sleep_day():
             p["watered"] = false
     if animals.size() > 0:
         money += animals.size() * 10
-        _toast("Produção dos animais: +$" + str(animals.size() * 10))
+        _toast("Producao dos animais: +$" + str(animals.size() * 10))
     else:
         _toast("Novo dia")
     _refresh_all()
@@ -430,24 +630,56 @@ func _spend(amount, reason):
     return true
 
 func _refresh_all():
-    money_label.text = "💰 $" + str(money)
-    day_label.text = "📅 Dia " + str(day)
-    energy_label.text = "⚡ Energia " + str(energy) + "%"
+    if title_label != null:
+        title_label.text = "FAZENDA\n" + (player_name if player_name != "" else "NOVO PRODUTOR")
+    if money_label != null:
+        money_label.text = "$" + str(money)
+    if day_label != null:
+        day_label.text = "Dia " + str(day)
+    if energy_label != null:
+        energy_label.text = "Energia " + str(energy) + "%"
+    if plot_grid != null:
+        _clear_children(plot_grid)
+        for i in range(MAX_PLOTS):
+            var btn = _button(_plot_text(i), Vector2(88, 44))
+            btn.disabled = not plots[i]["unlocked"]
+            btn.connect("pressed", self, "_plot_pressed", [i])
+            plot_grid.add_child(btn)
+    if mini_map != null:
+        _build_mini_map_contents()
 
 func _toast(msg):
+    if toast_label == null:
+        return
     toast_label.text = msg
     toast_label.visible = true
     var timer = get_tree().create_timer(1.8)
     yield(timer, "timeout")
-    toast_label.visible = false
+    if toast_label != null:
+        toast_label.visible = false
 
-func _save_game():
-    var data = {"money": money, "day": day, "energy": energy, "unlocked_plots": unlocked_plots, "plots": plots, "structures": structures, "animals": animals}
+func _toast_start(msg):
+    var l = Label.new()
+    l.text = msg
+    l.anchor_left = 0.25
+    l.anchor_top = 0.88
+    l.anchor_right = 0.75
+    l.anchor_bottom = 0.96
+    l.align = Label.ALIGN_CENTER
+    start_screen.add_child(l)
+    var timer = get_tree().create_timer(1.6)
+    yield(timer, "timeout")
+    if l != null:
+        l.queue_free()
+
+func _save_game(show=true):
+    var data = {"money": money, "day": day, "energy": energy, "unlocked_plots": unlocked_plots, "plots": plots, "structures": structures, "animals": animals, "player_name": player_name, "gender": gender, "profile_created": profile_created}
     var f = File.new()
     if f.open(SAVE_PATH, File.WRITE) == OK:
         f.store_string(to_json(data))
         f.close()
-        _toast("Jogo salvo")
+        if show:
+            _toast("Jogo salvo")
     _close_panels()
 
 func _load_game():
@@ -464,6 +696,9 @@ func _load_game():
     day = int(data.get("day", day))
     energy = int(data.get("energy", energy))
     unlocked_plots = int(data.get("unlocked_plots", unlocked_plots))
+    player_name = str(data.get("player_name", player_name))
+    gender = str(data.get("gender", gender))
+    profile_created = bool(data.get("profile_created", player_name != ""))
     if data.has("plots"):
         plots = data["plots"]
     if data.has("structures"):
