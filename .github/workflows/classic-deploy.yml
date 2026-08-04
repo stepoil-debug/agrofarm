@@ -9,6 +9,7 @@ on:
       - scripts/mobile-farm-patch.py
       - scripts/mobile-legibility-patch.py
       - scripts/mobile-legibility-postfix.py
+      - scripts/enhanced-systems-patch.py
   workflow_dispatch:
 
 permissions:
@@ -64,6 +65,7 @@ jobs:
           PY
           PROJECT="/tmp/harvest-base/Harvest Moon 2.0"
           python3 scripts/prepare-classic.py "$PROJECT"
+          python3 scripts/enhanced-systems-patch.py "$PROJECT"
           python3 scripts/mobile-farm-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-postfix.py "$PROJECT"
@@ -123,6 +125,19 @@ jobs:
           test -f "$GITHUB_WORKSPACE/site/index.js"
           test -f "$GITHUB_WORKSPACE/site/index.wasm"
           test -f "$GITHUB_WORKSPACE/site/index.pck"
+          if [ -d "$PROJECT/pwa" ]; then
+            cp "$PROJECT/pwa/manifest.json" "$GITHUB_WORKSPACE/site/manifest.json"
+            cp "$PROJECT/pwa/sw.js" "$GITHUB_WORKSPACE/site/sw.js"
+            python3 - <<'PY'
+          from pathlib import Path
+          html_path = Path('site/index.html')
+          html = html_path.read_text(encoding='utf-8')
+          inject = '<link rel="manifest" href="manifest.json"><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>'
+          if 'manifest.json' not in html:
+              html = html.replace('</head>', inject + '</head>') if '</head>' in html else inject + html
+          html_path.write_text(html, encoding='utf-8')
+          PY
+          fi
           du -sh "$GITHUB_WORKSPACE/site"
           find "$GITHUB_WORKSPACE/site" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
 
