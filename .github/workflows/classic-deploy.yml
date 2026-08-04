@@ -1,20 +1,11 @@
-name: Deploy AgroFarm Classic
+name: Deploy AgroFarm Mobile
 
 on:
   push:
     branches: [main]
     paths:
       - .github/workflows/classic-deploy.yml
-      - scripts/prepare-classic.py
-      - scripts/mobile-farm-patch.py
-      - scripts/mobile-legibility-patch.py
-      - scripts/mobile-legibility-postfix.py
-      - scripts/enhanced-systems-patch.py
-      - scripts/enhanced-gdscript-postfix.py
-      - scripts/enhanced-config-postfix.py
-      - scripts/farm-progression-patch.py
-      - scripts/mini-map-patch.py
-      - scripts/mobile-pack-alignment-patch.py
+      - scripts/mobile-clean-replacement-build.py
   workflow_dispatch:
 
 permissions:
@@ -25,7 +16,7 @@ permissions:
 env:
   GODOT_VERSION: 3.6.2
   GODOT_STATUS: stable
-  UPSTREAM_COMMIT: 8d9ccc4e49ad86b22eb38a9e00ddfa60150cd00c
+  PROJECT_DIR: /tmp/agro-farm-mobile
 
 concurrency:
   group: pages
@@ -38,54 +29,13 @@ jobs:
       - name: Baixar repositório AgroFarm
         uses: actions/checkout@v4
 
-      - name: Instalar FFmpeg
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y ffmpeg
-          ffmpeg -version | head -1
-
-      - name: Baixar base funcional
+      - name: Gerar projeto mobile limpo
         run: |
           set -euo pipefail
-          git clone --filter=blob:none --no-checkout https://github.com/Kenny-Haworth/Harvest-Moon-2.0.git /tmp/harvest-base
-          cd /tmp/harvest-base
-          git fetch --depth 1 origin "$UPSTREAM_COMMIT"
-          git checkout --detach "$UPSTREAM_COMMIT"
-          test -f "Harvest Moon 2.0/project.godot"
-
-      - name: Modelar base para o AgroFarm
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('scripts/prepare-classic.py')
-          text = path.read_text(encoding='utf-8')
-          start = text.find('    # Quando a próxima célula está bloqueada')
-          end_marker = '    text = text.replace(next_marker, next_replacement, 1)\n'
-          end = text.find(end_marker, start)
-          if start >= 0 and end >= 0:
-              end += len(end_marker)
-              text = text[:start] + text[end:]
-              path.write_text(text, encoding='utf-8')
-          PY
-          PROJECT="/tmp/harvest-base/Harvest Moon 2.0"
-          python3 scripts/prepare-classic.py "$PROJECT"
-          python3 scripts/enhanced-systems-patch.py "$PROJECT"
-          python3 scripts/enhanced-gdscript-postfix.py "$PROJECT"
-          python3 scripts/enhanced-config-postfix.py "$PROJECT"
-          python3 scripts/mobile-farm-patch.py "$PROJECT"
-          python3 scripts/mobile-legibility-patch.py "$PROJECT"
-          python3 scripts/mobile-legibility-postfix.py "$PROJECT"
-          python3 scripts/farm-progression-patch.py "$PROJECT"
-          python3 scripts/mini-map-patch.py "$PROJECT"
-          python3 scripts/mobile-pack-alignment-patch.py "$PROJECT"
-
-      - name: Restaurar cache dos efeitos sonoros
-        run: |
-          set -euo pipefail
-          cd /tmp/harvest-base
-          git checkout "$UPSTREAM_COMMIT" -- "Harvest Moon 2.0/.import"
-          test -f "Harvest Moon 2.0/.import/bell.wav-c0276555e83dc3997cf546dab5593db3.sample"
+          python3 scripts/mobile-clean-replacement-build.py "$PROJECT_DIR"
+          test -f "$PROJECT_DIR/project.godot"
+          test -f "$PROJECT_DIR/Main.tscn"
+          test -f "$PROJECT_DIR/Main.gd"
 
       - name: Instalar Godot 3.6.2
         run: |
@@ -117,27 +67,25 @@ jobs:
       - name: Importar e validar projeto
         run: |
           set -o pipefail
-          PROJECT="/tmp/harvest-base/Harvest Moon 2.0"
-          timeout 300 godot3 --path "$PROJECT" --editor --quit 2>&1 | tee /tmp/godot-import.log
+          timeout 300 godot3 --path "$PROJECT_DIR" --editor --quit 2>&1 | tee /tmp/godot-import.log
           if grep -E "SCRIPT ERROR|Parse Error|Failed to load|Cannot open file" /tmp/godot-import.log; then
-            echo "Falha durante a importação do projeto."
+            echo "Falha durante a importação do projeto mobile."
             exit 1
           fi
 
       - name: Exportar jogo para navegador
         run: |
           set -euo pipefail
-          PROJECT="/tmp/harvest-base/Harvest Moon 2.0"
           mkdir -p "$GITHUB_WORKSPACE/site"
-          godot3 --path "$PROJECT" --export "HTML5" "$GITHUB_WORKSPACE/site/index.html"
+          godot3 --path "$PROJECT_DIR" --export "HTML5" "$GITHUB_WORKSPACE/site/index.html"
           touch "$GITHUB_WORKSPACE/site/.nojekyll"
           test -f "$GITHUB_WORKSPACE/site/index.html"
           test -f "$GITHUB_WORKSPACE/site/index.js"
           test -f "$GITHUB_WORKSPACE/site/index.wasm"
           test -f "$GITHUB_WORKSPACE/site/index.pck"
-          if [ -d "$PROJECT/pwa" ]; then
-            cp "$PROJECT/pwa/manifest.json" "$GITHUB_WORKSPACE/site/manifest.json"
-            cp "$PROJECT/pwa/sw.js" "$GITHUB_WORKSPACE/site/sw.js"
+          if [ -d "$PROJECT_DIR/pwa" ]; then
+            cp "$PROJECT_DIR/pwa/manifest.json" "$GITHUB_WORKSPACE/site/manifest.json"
+            cp "$PROJECT_DIR/pwa/sw.js" "$GITHUB_WORKSPACE/site/sw.js"
             python3 - <<'PY'
           from pathlib import Path
           html_path = Path('site/index.html')
@@ -168,6 +116,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Publicar AgroFarm Classic
+      - name: Publicar AgroFarm Mobile
         id: deployment
         uses: actions/deploy-pages@v4
