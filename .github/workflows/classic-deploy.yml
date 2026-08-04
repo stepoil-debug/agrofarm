@@ -11,6 +11,7 @@ on:
       - scripts/mobile-legibility-postfix.py
       - scripts/enhanced-systems-patch.py
       - scripts/enhanced-gdscript-postfix.py
+      - scripts/enhanced-config-postfix.py
   workflow_dispatch:
 
 permissions:
@@ -68,6 +69,7 @@ jobs:
           python3 scripts/prepare-classic.py "$PROJECT"
           python3 scripts/enhanced-systems-patch.py "$PROJECT"
           python3 scripts/enhanced-gdscript-postfix.py "$PROJECT"
+          python3 scripts/enhanced-config-postfix.py "$PROJECT"
           python3 scripts/mobile-farm-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-postfix.py "$PROJECT"
