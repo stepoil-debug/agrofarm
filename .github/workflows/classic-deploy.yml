@@ -12,6 +12,7 @@ on:
       - scripts/enhanced-systems-patch.py
       - scripts/enhanced-gdscript-postfix.py
       - scripts/enhanced-config-postfix.py
+      - scripts/farm-progression-patch.py
   workflow_dispatch:
 
 permissions:
@@ -73,6 +74,7 @@ jobs:
           python3 scripts/mobile-farm-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-postfix.py "$PROJECT"
+          python3 scripts/farm-progression-patch.py "$PROJECT"
 
       - name: Restaurar cache dos efeitos sonoros
         run: |
@@ -165,3 +167,71 @@ jobs:
       - name: Publicar AgroFarm Classic
         id: deployment
         uses: actions/deploy-pages@v4
+
+  status:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+    permissions:
+      contents: write
+    steps:
+      - name: Baixar repositório AgroFarm
+        uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+
+      - name: Registrar status da publicação
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          status = os.environ.get('WORKFLOW_STATUS', 'unknown')
+          conclusion = os.environ.get('WORKFLOW_CONCLUSION', 'unknown')
+          url = 'https://stepoil-debug.github.io/agrofarm/'
+          http_code = None
+          title = ''
+          contains_godot_export = False
+          contains_agrofarm_classic = False
+          try:
+              with urllib.request.urlopen(url, timeout=20) as response:
+                  http_code = response.status
+                  html = response.read(600000).decode('utf-8', errors='ignore')
+                  import re
+                  m = re.search(r'<title>(.*?)</title>', html, re.I | re.S)
+                  title = m.group(1).strip() if m else ''
+                  contains_godot_export = 'index.wasm' in html or 'Godot' in html
+                  contains_agrofarm_classic = 'AgroFarm' in html or 'agrofarm' in html.lower()
+          except Exception as exc:
+              http_code = 'error: ' + str(exc)
+          data = {
+              'checked_at': os.environ.get('CHECKED_AT'),
+              'workflow': {
+                  'id': int(os.environ.get('GITHUB_RUN_ID', '0')),
+                  'status': status,
+                  'conclusion': conclusion,
+                  'url': 'https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
+                  'head_sha': os.environ.get('GITHUB_SHA'),
+              },
+              'site': {
+                  'url': url,
+                  'http_code': http_code,
+                  'title': title,
+                  'contains_godot_export': contains_godot_export,
+                  'contains_agrofarm_classic': contains_agrofarm_classic,
+              }
+          }
+          from pathlib import Path
+          Path('deployment-status').mkdir(exist_ok=True)
+          Path('deployment-status/classic.json').write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+          PY
+        env:
+          CHECKED_AT: ${{ github.event.head_commit.timestamp }}
+          WORKFLOW_STATUS: completed
+          WORKFLOW_CONCLUSION: ${{ needs.deploy.result }}
+
+      - name: Commit status
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment-status/classic.json
+          git commit -m "ci: atualizar status da publicação classic [skip ci]" || exit 0
+          git push
