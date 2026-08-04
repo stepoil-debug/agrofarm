@@ -1,11 +1,11 @@
-name: Deploy AgroFarm Mobile
+name: Deploy AgroFarm Site
 
 on:
   push:
     branches: [main]
     paths:
       - .github/workflows/classic-deploy.yml
-      - scripts/mobile-clean-replacement-build.py
+      - site/**
   workflow_dispatch:
 
 permissions:
@@ -13,109 +13,39 @@ permissions:
   pages: write
   id-token: write
 
-env:
-  GODOT_VERSION: 3.6.2
-  GODOT_STATUS: stable
-  PROJECT_DIR: /tmp/agro-farm-mobile
-
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Baixar repositório AgroFarm
+      - name: Baixar repositório
         uses: actions/checkout@v4
 
-      - name: Gerar projeto mobile limpo
+      - name: Validar site
         run: |
           set -euo pipefail
-          python3 scripts/mobile-clean-replacement-build.py "$PROJECT_DIR"
-          test -f "$PROJECT_DIR/project.godot"
-          test -f "$PROJECT_DIR/Main.tscn"
-          test -f "$PROJECT_DIR/Main.gd"
-
-      - name: Instalar Godot 3.6.2
-        run: |
-          set -euo pipefail
-          curl -fL --retry 4 --retry-delay 3 \
-            -o /tmp/godot.zip \
-            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-${GODOT_STATUS}/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux_headless.64.zip"
-          unzip -q /tmp/godot.zip -d /tmp/godot
-          chmod +x "/tmp/godot/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux_headless.64"
-          sudo mv "/tmp/godot/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux_headless.64" /usr/local/bin/godot3
-          godot3 --version
-
-      - name: Instalar templates HTML5
-        run: |
-          set -euo pipefail
-          curl -fL --retry 4 --retry-delay 3 \
-            -o /tmp/templates.tpz \
-            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-${GODOT_STATUS}/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_export_templates.tpz"
-          rm -rf /tmp/export-templates
-          mkdir -p /tmp/export-templates
-          unzip -q /tmp/templates.tpz -d /tmp/export-templates
-          for destination in \
-            "$HOME/.local/share/godot/templates/${GODOT_VERSION}.${GODOT_STATUS}" \
-            "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_STATUS}"; do
-            mkdir -p "$destination"
-            cp -R /tmp/export-templates/templates/. "$destination/"
-          done
-
-      - name: Importar e validar projeto
-        run: |
-          set -o pipefail
-          timeout 300 godot3 --path "$PROJECT_DIR" --editor --quit 2>&1 | tee /tmp/godot-import.log
-          if grep -E "SCRIPT ERROR|Parse Error|Failed to load|Cannot open file" /tmp/godot-import.log; then
-            echo "Falha durante a importação do projeto mobile."
-            exit 1
-          fi
-
-      - name: Exportar jogo para navegador
-        run: |
-          set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/site"
-          godot3 --path "$PROJECT_DIR" --export "HTML5" "$GITHUB_WORKSPACE/site/index.html"
-          touch "$GITHUB_WORKSPACE/site/.nojekyll"
-          test -f "$GITHUB_WORKSPACE/site/index.html"
-          test -f "$GITHUB_WORKSPACE/site/index.js"
-          test -f "$GITHUB_WORKSPACE/site/index.wasm"
-          test -f "$GITHUB_WORKSPACE/site/index.pck"
-          if [ -d "$PROJECT_DIR/pwa" ]; then
-            cp "$PROJECT_DIR/pwa/manifest.json" "$GITHUB_WORKSPACE/site/manifest.json"
-            cp "$PROJECT_DIR/pwa/sw.js" "$GITHUB_WORKSPACE/site/sw.js"
-            python3 - <<'PY'
-          from pathlib import Path
-          html_path = Path('site/index.html')
-          html = html_path.read_text(encoding='utf-8')
-          inject = '<link rel="manifest" href="manifest.json"><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>'
-          if 'manifest.json' not in html:
-              html = html.replace('</head>', inject + '</head>') if '</head>' in html else inject + html
-          html_path.write_text(html, encoding='utf-8')
-          PY
-          fi
-          du -sh "$GITHUB_WORKSPACE/site"
-          find "$GITHUB_WORKSPACE/site" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+          test -f site/index.html
+          test -f site/manifest.json
+          test -f site/sw.js
+          touch site/.nojekyll
+          find site -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
-      - name: Enviar jogo
+      - name: Enviar site
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Publicar AgroFarm Mobile
+      - name: Publicar AgroFarm Site
         id: deployment
         uses: actions/deploy-pages@v4
