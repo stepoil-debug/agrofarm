@@ -14,6 +14,7 @@ on:
       - scripts/enhanced-config-postfix.py
       - scripts/farm-progression-patch.py
       - scripts/mini-map-patch.py
+      - scripts/mobile-pack-alignment-patch.py
   workflow_dispatch:
 
 permissions:
@@ -77,6 +78,7 @@ jobs:
           python3 scripts/mobile-legibility-postfix.py "$PROJECT"
           python3 scripts/farm-progression-patch.py "$PROJECT"
           python3 scripts/mini-map-patch.py "$PROJECT"
+          python3 scripts/mobile-pack-alignment-patch.py "$PROJECT"
 
       - name: Restaurar cache dos efeitos sonoros
         run: |
