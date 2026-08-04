@@ -10,6 +10,7 @@ on:
       - scripts/mobile-legibility-patch.py
       - scripts/mobile-legibility-postfix.py
       - scripts/enhanced-systems-patch.py
+      - scripts/enhanced-gdscript-postfix.py
   workflow_dispatch:
 
 permissions:
@@ -66,6 +67,7 @@ jobs:
           PROJECT="/tmp/harvest-base/Harvest Moon 2.0"
           python3 scripts/prepare-classic.py "$PROJECT"
           python3 scripts/enhanced-systems-patch.py "$PROJECT"
+          python3 scripts/enhanced-gdscript-postfix.py "$PROJECT"
           python3 scripts/mobile-farm-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-patch.py "$PROJECT"
           python3 scripts/mobile-legibility-postfix.py "$PROJECT"
