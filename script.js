@@ -8,9 +8,22 @@ const form = document.querySelector("#order-form");
 const selectedPlanLabel = document.querySelector("#selected-plan");
 const planButtons = document.querySelectorAll(".plan-button");
 const closeButtons = document.querySelectorAll("[data-close-modal]");
+const celebrationDateInput = form.elements.celebrationDate;
 
 let selectedPlan = "";
 let selectedPrice = "";
+
+function getTodayForInput() {
+  const today = new Date();
+  const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+  return localDate.toISOString().split("T")[0];
+}
+
+function formatBrazilianDate(value) {
+  if (!value) return "Não informada";
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
 
 function openModal(plan, price) {
   selectedPlan = plan;
@@ -39,30 +52,31 @@ function makeWhatsAppUrl(message) {
     return `https://wa.me/${number}?text=${encodedMessage}`;
   }
 
-  // Sem número configurado, o WhatsApp permite que a pessoa escolha o contato.
   return `https://wa.me/?text=${encodedMessage}`;
 }
 
 function buildOrderMessage(data) {
   return [
-    "Olá! Quero criar uma música personalizada. 🎵",
+    "Olá! Quero criar uma homenagem em forma de música para a pessoa que amo. 🎵❤️",
     "",
     `*Plano:* ${selectedPlan}`,
     `*Valor:* ${selectedPrice}`,
     `*Meu nome:* ${data.get("customerName")}`,
     `*Pessoa homenageada:* ${data.get("recipientName")}`,
+    `*Como eu a chamo:* ${data.get("nickname") || "Não informado"}`,
     `*Ocasião:* ${data.get("occasion")}`,
+    `*Data da comemoração:* ${formatBrazilianDate(data.get("celebrationDate"))}`,
     `*Estilo musical:* ${data.get("musicStyle")}`,
     `*Preferência de voz:* ${data.get("voice")}`,
     `*Pagamento preferido:* ${data.get("payment")}`,
     "",
-    "*Nossa história:*",
+    "*A história de nós dois:*",
     data.get("story"),
     "",
-    "*Mensagem que desejo transmitir:*",
-    data.get("message") || "Não informada",
+    "*O que desejo que essa pessoa sinta ao ouvir:*",
+    data.get("message") || "Não informado",
     "",
-    "Gostaria de confirmar o pedido e receber as orientações de pagamento.",
+    "Gostaria de confirmar o prazo para essa data e receber as orientações de pagamento.",
   ].join("\n");
 }
 
@@ -94,4 +108,5 @@ form.addEventListener("submit", (event) => {
   window.open(makeWhatsAppUrl(message), "_blank", "noopener,noreferrer");
 });
 
+celebrationDateInput.min = getTodayForInput();
 document.querySelector("#current-year").textContent = new Date().getFullYear();
