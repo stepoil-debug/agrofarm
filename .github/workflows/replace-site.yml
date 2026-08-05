@@ -1,0 +1,56 @@
+name: Substituir AgroFarm pela página de músicas
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/replace-site.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  replace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Substituir todo o conteúdo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          mkdir -p .github/workflows
+
+          fetch_blob() {
+            local sha="$1"
+            local destination="$2"
+            curl -fsSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/blobs/${sha}" \
+              | jq -r '.content' \
+              | tr -d '\n' \
+              | base64 -d > "${destination}"
+          }
+
+          fetch_blob "43b34bd5e33d48a38092ae5dc5fc59aade3c0d95" "index.html"
+          fetch_blob "50e6f7a8ab7ff2a7939477c34a9d7ed00de18506" "styles.css"
+          fetch_blob "cb03e1cd5b5cbee7fb95470cf870e8784804e464" "script.js"
+          fetch_blob "80b84a352c40a0e30f2efc09e8b4e70649976536" "favicon.svg"
+          fetch_blob "712521ee60cfbcae84f4a453cadfcd7fd3f47cba" "README.md"
+          fetch_blob "2b9f6dbde2854918a4dfa7200a8e6323edb104db" ".github/workflows/deploy.yml"
+
+          touch .nojekyll
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Replace AgroFarm with music sales landing page"
+          git push origin HEAD:main
