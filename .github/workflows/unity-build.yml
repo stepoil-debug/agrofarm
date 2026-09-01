@@ -1,0 +1,108 @@
+name: Unity 6 Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Plataforma para gerar
+        required: true
+        default: WebGL
+        type: choice
+        options:
+          - WebGL
+          - Android
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/agrofarm-unity/**"
+      - ".github/workflows/unity-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  static-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Validar estrutura Unity
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("apps/agrofarm-unity")
+          required = [
+              root / "ProjectSettings/ProjectVersion.txt",
+              root / "Packages/manifest.json",
+              root / "Assets/AgroFarm/Runtime/Bootstrap/AgroFarmBootstrap.cs",
+              root / "Assets/AgroFarm/Runtime/Player/AAAFarmPlayerMotor.cs",
+              root / "Assets/AgroFarm/Runtime/World/FarmWorldFactory.cs",
+              root / "Assets/AgroFarm/Runtime/UI/FarmHUD.cs",
+              root / "Assets/AgroFarm/Editor/AgroFarmBuild.cs",
+          ]
+          missing = [str(path) for path in required if not path.exists()]
+          if missing:
+              raise SystemExit("Arquivos ausentes:\n" + "\n".join(missing))
+
+          manifest = json.loads((root / "Packages/manifest.json").read_text())
+          dependencies = manifest["dependencies"]
+          assert dependencies["com.unity.inputsystem"] == "1.17.0"
+          assert dependencies["com.unity.render-pipelines.universal"] == "17.2.0"
+
+          version = (root / "ProjectSettings/ProjectVersion.txt").read_text()
+          assert "6000.3.18f1" in version
+
+          for path in root.rglob("*.cs"):
+              text = path.read_text(encoding="utf-8")
+              if "<CONTENT>" in text or "temporary" == text.strip():
+                  raise SystemExit(f"Conteúdo inválido em {path}")
+          print("Estrutura Unity validada.")
+          PY
+
+  unity-build:
+    needs: static-validation
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    env:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+    steps:
+      - name: Verificar licença configurada
+        run: |
+          if [ -z "$UNITY_LICENSE" ] || [ -z "$UNITY_EMAIL" ] || [ -z "$UNITY_PASSWORD" ]; then
+            echo "Configure UNITY_LICENSE, UNITY_EMAIL e UNITY_PASSWORD nos secrets do repositório."
+            exit 1
+          fi
+
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Restaurar cache da Library
+        uses: actions/cache@v4
+        with:
+          path: apps/agrofarm-unity/Library
+          key: Library-AgroFarm-6000.3.18f1-${{ runner.os }}-${{ hashFiles('apps/agrofarm-unity/Packages/**') }}
+          restore-keys: |
+            Library-AgroFarm-6000.3.18f1-${{ runner.os }}-
+
+      - name: Compilar e construir Unity
+        uses: game-ci/unity-builder@v5
+        with:
+          projectPath: apps/agrofarm-unity
+          unityVersion: 6000.3.18f1
+          targetPlatform: ${{ inputs.target }}
+          buildName: AgroFarm
+          buildsPath: Builds
+          customParameters: -nographics
+
+      - name: Publicar artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgroFarm-${{ inputs.target }}
+          path: Builds
+          if-no-files-found: error
+          retention-days: 14
