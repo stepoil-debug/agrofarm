@@ -22,24 +22,29 @@ module.exports = async function handler(req, res) {
     return json(res, 503, {
       success: false,
       code: 'CHECKOUT_NOT_CONFIGURED',
-      message: 'O checkout ainda não está configurado. Tente novamente em instantes.'
+      message: 'A conta InfinitePay ainda não está conectada a este site.'
     });
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   const customerName = String(body.customerName || '').trim().slice(0, 100);
-  const customerPhone = String(body.customerPhone || '').replace(/[^0-9+]/g, '').slice(0, 20);
+  const customerPhone = String(body.customerPhone || '').replace(/\D/g, '').slice(0, 20);
 
-  if (customerName.length < 2 || customerPhone.replace(/\D/g, '').length < 10) {
+  if (customerName.length < 2 || customerPhone.length < 10) {
     return json(res, 400, { success: false, message: 'Informe seu nome e um WhatsApp válido.' });
   }
 
+  const phoneNumber = customerPhone.startsWith('55') ? `+${customerPhone}` : `+55${customerPhone}`;
   const orderNsu = `cancao-${Date.now()}-${randomBytes(4).toString('hex')}`;
 
   const payload = {
     handle,
     order_nsu: orderNsu,
     redirect_url: `${SITE_URL}/?pagamento=retorno`,
+    customer: {
+      name: customerName,
+      phone_number: phoneNumber
+    },
     items: [
       {
         quantity: 1,
@@ -60,7 +65,7 @@ module.exports = async function handler(req, res) {
 
     if (!response.ok || !data.url) {
       console.error('InfinitePay create link error', response.status, data);
-      return json(res, 502, { success: false, message: 'Não foi possível iniciar o PIX agora. Tente novamente.' });
+      return json(res, 502, { success: false, message: 'Não foi possível abrir o checkout da InfinitePay agora. Tente novamente.' });
     }
 
     return json(res, 200, {
@@ -71,6 +76,6 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('InfinitePay create link exception', error);
-    return json(res, 502, { success: false, message: 'Falha de comunicação com o pagamento. Tente novamente.' });
+    return json(res, 502, { success: false, message: 'Falha de comunicação com a InfinitePay. Tente novamente.' });
   }
 };
