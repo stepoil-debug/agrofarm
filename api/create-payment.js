@@ -2,7 +2,7 @@ const { randomBytes } = require('node:crypto');
 
 const PRICE_CENTS = 4990;
 const SITE_URL = 'https://cancao.dflabs.app';
-const FALLBACK_HANDLE = 'lessence';
+const FALLBACK_HANDLE = 'fran-doug-65a';
 
 function getHandle() {
   return (process.env.INFINITEPAY_HANDLE || FALLBACK_HANDLE).replace(/^\$/, '').trim();
