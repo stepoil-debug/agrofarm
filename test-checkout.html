@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Checkout de teste | Canção de Nós</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;font-family:Inter,system-ui,sans-serif;background:linear-gradient(180deg,#fffaf7,#f9e8ef);color:#351521}main{width:min(520px,100%);padding:32px;border-radius:28px;background:#fff;box-shadow:0 30px 90px rgba(65,18,42,.14);border:1px solid rgba(104,28,67,.12)}.tag{display:inline-block;padding:7px 11px;border-radius:999px;background:#fff0f5;color:#7b204e;font-weight:800;font-size:.78rem;letter-spacing:.08em}h1{font-family:Georgia,serif;font-size:2.1rem;margin:18px 0 10px}p{color:#745f69;line-height:1.6}.amount{font-size:2.4rem;font-weight:900;color:#7b204e;margin:22px 0}.box{padding:16px;border-radius:18px;background:#f7faf8;border:1px solid #dfeee5;margin:18px 0}.button{width:100%;min-height:54px;border:0;border-radius:999px;background:#7b204e;color:#fff;font-weight:800;font-size:1rem;cursor:pointer}.button:hover{filter:brightness(1.06)}small{display:block;margin-top:14px;color:#8b7882;text-align:center}
+  </style>
+</head>
+<body>
+  <main>
+    <span class="tag">AMBIENTE DE TESTE</span>
+    <h1>Simulação de PIX</h1>
+    <p>Esta página imita o checkout da InfinitePay sem movimentar dinheiro.</p>
+    <div class="amount">R$ 49,90</div>
+    <div class="box"><strong>Pedido</strong><br><span id="order">carregando...</span></div>
+    <button class="button" id="approve" type="button">Simular PIX aprovado</button>
+    <small>Nenhum pagamento real será realizado.</small>
+  </main>
+  <script>
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const orderNsu = params.get('order_nsu') || `TEST-${Date.now()}`;
+      document.querySelector('#order').textContent = orderNsu;
+      document.querySelector('#approve').addEventListener('click', () => {
+        const ret = new URLSearchParams({
+          order_nsu: orderNsu,
+          transaction_nsu: `TEST-TXN-${Date.now()}`,
+          slug: `test-${Date.now()}`,
+          capture_method: 'pix',
+          receipt_url: `${location.origin}/test-receipt.html?order_nsu=${encodeURIComponent(orderNsu)}`
+        });
+        location.href = `/payment-return.html?${ret.toString()}`;
+      });
+    })();
+  </script>
+</body>
+</html>
