@@ -1,0 +1,22 @@
+name: Checkout E2E Test
+
+on:
+  push:
+    branches:
+      - test/checkout-e2e
+  workflow_dispatch:
+
+jobs:
+  checkout-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Simulate PIX purchase flow
+        run: node tests/checkout-e2e.test.cjs
