@@ -55,7 +55,7 @@ module.exports = async function handler(req, res) {
   const payload = {
     handle,
     order_nsu: orderNsu,
-    redirect_url: `${SITE_URL}/?pagamento=retorno`,
+    redirect_url: `${SITE_URL}/payment-return.html`,
     items: [
       {
         quantity: 1,
