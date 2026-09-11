@@ -1,11 +1,21 @@
 const { randomBytes } = require('node:crypto');
 
 const PRICE_CENTS = 4990;
-const SITE_URL = 'https://cancao.dflabs.app';
+const PROD_SITE_URL = 'https://cancao.dflabs.app';
 const FALLBACK_HANDLE = 'fran-doug-65a';
 
 function getHandle() {
   return (process.env.INFINITEPAY_HANDLE || FALLBACK_HANDLE).replace(/^\$/, '').trim();
+}
+
+function json(res, status, payload) {
+  res.status(status).json(payload);
+}
+
+function getBaseUrl(req) {
+  const proto = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  return `${proto}://${host}`;
 }
 
 function isSafeCheckoutUrl(value) {
@@ -23,14 +33,32 @@ function isSafeCheckoutUrl(value) {
   }
 }
 
-function json(res, status, payload) {
-  res.status(status).json(payload);
-}
-
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return json(res, 405, { success: false, message: 'Método não permitido.' });
+  }
+
+  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+  const customerName = String(body.customerName || '').trim().slice(0, 100);
+  const customerPhone = String(body.customerPhone || '').replace(/\D/g, '').slice(0, 20);
+
+  if (customerName.length < 2 || customerPhone.length < 10) {
+    return json(res, 400, { success: false, message: 'Informe seu nome e um WhatsApp válido.' });
+  }
+
+  const isPreview = process.env.VERCEL_ENV === 'preview' || process.env.VERCEL_ENV === 'development';
+  const orderNsu = `${isPreview ? 'TEST' : 'cancao'}-${Date.now()}-${randomBytes(4).toString('hex')}`;
+
+  if (isPreview) {
+    const baseUrl = getBaseUrl(req);
+    return json(res, 200, {
+      success: true,
+      testMode: true,
+      checkoutUrl: `${baseUrl}/test-checkout.html?order_nsu=${encodeURIComponent(orderNsu)}`,
+      orderNsu,
+      amount: PRICE_CENTS
+    });
   }
 
   const handle = getHandle();
@@ -42,20 +70,10 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-  const customerName = String(body.customerName || '').trim().slice(0, 100);
-  const customerPhone = String(body.customerPhone || '').replace(/\D/g, '').slice(0, 20);
-
-  if (customerName.length < 2 || customerPhone.length < 10) {
-    return json(res, 400, { success: false, message: 'Informe seu nome e um WhatsApp válido.' });
-  }
-
-  const orderNsu = `cancao-${Date.now()}-${randomBytes(4).toString('hex')}`;
-
   const payload = {
     handle,
     order_nsu: orderNsu,
-    redirect_url: `${SITE_URL}/payment-return.html`,
+    redirect_url: `${PROD_SITE_URL}/payment-return.html`,
     items: [
       {
         quantity: 1,
@@ -75,7 +93,6 @@ module.exports = async function handler(req, res) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok || !isSafeCheckoutUrl(data.url)) {
-      console.error('InfinitePay create link error', response.status, data);
       return json(res, 502, {
         success: false,
         code: 'INFINITEPAY_CHECKOUT_ERROR',
@@ -90,7 +107,6 @@ module.exports = async function handler(req, res) {
       amount: PRICE_CENTS
     });
   } catch (error) {
-    console.error('InfinitePay create link exception', error);
     return json(res, 502, {
       success: false,
       code: 'INFINITEPAY_CONNECTION_ERROR',
