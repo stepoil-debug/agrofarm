@@ -1,6 +1,6 @@
 (() => {
   const MUSIC = {
-    src: "https://raw.githubusercontent.com/stepoil-debug/agrofarm/348bf555545a21036379358dc6b4704a4b35dcec/se-as-palavras-forem-poucas.mp3",
+    src: "https://raw.githubusercontent.com/stepoil-debug/agrofarm/main/se-as-palavras-forem-poucas.mp3",
     volume: 0.22,
     storageKey: "cancao_music_state_v1",
   };
@@ -81,8 +81,6 @@
 
     const unlock = () => {
       if (desiredPlaying && audio.paused) play();
-      window.removeEventListener('pointerdown', unlock, true);
-      window.removeEventListener('keydown', unlock, true);
     };
     window.addEventListener('pointerdown', unlock, { capture: true, once: true });
     window.addEventListener('keydown', unlock, { capture: true, once: true });
@@ -104,12 +102,25 @@
     render();
   }
 
+  function loadInfinitePayOverride() {
+    const flow = document.createElement('script');
+    flow.src = './infinitepay-flow.js';
+    flow.async = false;
+    document.body.appendChild(flow);
+  }
+
   function loadMainApp() {
     const main = document.createElement('script');
     main.src = './app-main.js';
     main.async = false;
-    main.onload = setupAmbientMusic;
-    main.onerror = setupAmbientMusic;
+    main.onload = () => {
+      loadInfinitePayOverride();
+      setupAmbientMusic();
+    };
+    main.onerror = () => {
+      loadInfinitePayOverride();
+      setupAmbientMusic();
+    };
     document.body.appendChild(main);
   }
 
