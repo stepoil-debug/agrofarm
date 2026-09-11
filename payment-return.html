@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Confirmando pagamento | Canção de Nós</title>
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#2f1723;background:#fff8f5}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 20%,#f9dce7,transparent 32rem),linear-gradient(180deg,#fffaf7,#fff)}
+    main{width:min(520px,100%);padding:34px;border:1px solid rgba(104,28,67,.12);border-radius:28px;background:rgba(255,255,255,.92);box-shadow:0 28px 90px rgba(69,20,43,.14);text-align:center}
+    .dot{width:54px;height:54px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:#7b204e;color:#fff;font-size:24px;box-shadow:0 14px 34px rgba(91,20,56,.25)}
+    h1{font-family:Georgia,"Times New Roman",serif;font-size:2rem;margin:0 0 12px}p{margin:0;color:#725f68;line-height:1.65}.spinner{width:24px;height:24px;margin:22px auto 0;border:3px solid rgba(123,32,78,.18);border-top-color:#7b204e;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="dot">✓</div>
+    <h1>Pagamento recebido</h1>
+    <p id="status">Voltando para o Canção de Nós para confirmar seu PIX...</p>
+    <div class="spinner" aria-hidden="true"></div>
+  </main>
+  <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      params.set('pagamento','retorno');
+      const search = `?${params.toString()}`;
+      const payload = { type: 'cancao-infinitepay-return', search };
+      const status = document.querySelector('#status');
+
+      if (window.opener && !window.opener.closed) {
+        try {
+          window.opener.postMessage(payload, window.location.origin);
+          status.textContent = 'Pagamento enviado para confirmação. Esta janela será fechada automaticamente.';
+          setTimeout(() => window.close(), 900);
+          return;
+        } catch (_) {}
+      }
+
+      status.textContent = 'Redirecionando para concluir seu pedido...';
+      setTimeout(() => {
+        window.location.replace(`/${search}`);
+      }, 500);
+    })();
+  </script>
+</body>
+</html>
