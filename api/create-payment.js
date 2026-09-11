@@ -2,9 +2,25 @@ const { randomBytes } = require('node:crypto');
 
 const PRICE_CENTS = 4990;
 const SITE_URL = 'https://cancao.dflabs.app';
+const FALLBACK_HANDLE = 'lessence';
 
 function getHandle() {
-  return (process.env.INFINITEPAY_HANDLE || '').replace(/^\$/, '').trim();
+  return (process.env.INFINITEPAY_HANDLE || FALLBACK_HANDLE).replace(/^\$/, '').trim();
+}
+
+function isSafeCheckoutUrl(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    return url.protocol === 'https:' && (
+      host === 'infinitepay.com.br' ||
+      host.endsWith('.infinitepay.com.br') ||
+      host === 'infinitepay.io' ||
+      host.endsWith('.infinitepay.io')
+    );
+  } catch {
+    return false;
+  }
 }
 
 function json(res, status, payload) {
@@ -34,17 +50,12 @@ module.exports = async function handler(req, res) {
     return json(res, 400, { success: false, message: 'Informe seu nome e um WhatsApp válido.' });
   }
 
-  const phoneNumber = customerPhone.startsWith('55') ? `+${customerPhone}` : `+55${customerPhone}`;
   const orderNsu = `cancao-${Date.now()}-${randomBytes(4).toString('hex')}`;
 
   const payload = {
     handle,
     order_nsu: orderNsu,
     redirect_url: `${SITE_URL}/?pagamento=retorno`,
-    customer: {
-      name: customerName,
-      phone_number: phoneNumber
-    },
     items: [
       {
         quantity: 1,
@@ -63,9 +74,13 @@ module.exports = async function handler(req, res) {
 
     const data = await response.json().catch(() => ({}));
 
-    if (!response.ok || !data.url) {
+    if (!response.ok || !isSafeCheckoutUrl(data.url)) {
       console.error('InfinitePay create link error', response.status, data);
-      return json(res, 502, { success: false, message: 'Não foi possível abrir o checkout da InfinitePay agora. Tente novamente.' });
+      return json(res, 502, {
+        success: false,
+        code: 'INFINITEPAY_CHECKOUT_ERROR',
+        message: 'Não foi possível abrir o checkout da InfinitePay agora. Tente novamente.'
+      });
     }
 
     return json(res, 200, {
@@ -76,6 +91,10 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('InfinitePay create link exception', error);
-    return json(res, 502, { success: false, message: 'Falha de comunicação com a InfinitePay. Tente novamente.' });
+    return json(res, 502, {
+      success: false,
+      code: 'INFINITEPAY_CONNECTION_ERROR',
+      message: 'Falha de comunicação com a InfinitePay. Tente novamente.'
+    });
   }
 };
