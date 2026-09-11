@@ -26,11 +26,14 @@ Enquanto o número estiver vazio, o site abre o WhatsApp com a mensagem pronta e
 
 ## Publicação
 
-O site é estático e publicado automaticamente no GitHub Pages pelo workflow `.github/workflows/deploy.yml` após cada alteração na branch `main`.
+O site é estático. O repositório está preparado para publicação na Vercel com build via `npm run build` e saída em `dist/`, conforme `vercel.json`. O GitHub Pages também continua disponível pelo workflow `.github/workflows/deploy.yml` após alterações na branch `main`.
 
 ## Arquivos
 
 - `index.html`: estrutura e conteúdo da página
 - `styles.css`: identidade visual e responsividade
+- `enhancements.css`: camada visual premium e microinterações
 - `script.js`: formulário, seleção de plano e mensagem do WhatsApp
 - `favicon.svg`: ícone do site
+- `build.mjs`: gera a pasta `dist/` usada no deploy da Vercel
+- `vercel.json`: configuração de build, saída e headers da Vercel
