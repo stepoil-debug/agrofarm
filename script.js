@@ -102,10 +102,21 @@
     render();
   }
 
+  function loadOrderFormCleanup() {
+    if (document.querySelector('script[data-order-cleanup]')) return;
+    const cleanup = document.createElement('script');
+    cleanup.src = './order-form-cleanup.js';
+    cleanup.async = false;
+    cleanup.dataset.orderCleanup = 'true';
+    document.body.appendChild(cleanup);
+  }
+
   function loadInfinitePayOverride() {
     const flow = document.createElement('script');
     flow.src = './infinitepay-flow.js';
     flow.async = false;
+    flow.onload = loadOrderFormCleanup;
+    flow.onerror = loadOrderFormCleanup;
     document.body.appendChild(flow);
   }
 
