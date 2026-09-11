@@ -1,0 +1,1 @@
+Substituir o asset da trilha por uma versão web completa e validar duração antes do deploy.
