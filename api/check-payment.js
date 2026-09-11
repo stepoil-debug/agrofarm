@@ -15,6 +15,32 @@ module.exports = async function handler(req, res) {
     return json(res, 405, { success: false, verified: false, message: 'Método não permitido.' });
   }
 
+  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+  const orderNsu = String(body.orderNsu || body.order_nsu || '').trim();
+  const transactionNsu = String(body.transactionNsu || body.transaction_nsu || '').trim();
+  const slug = String(body.slug || '').trim();
+
+  if (!orderNsu || !transactionNsu || !slug) {
+    return json(res, 400, { success: false, verified: false, message: 'Dados de pagamento incompletos.' });
+  }
+
+  const isPreview = process.env.VERCEL_ENV === 'preview' || process.env.VERCEL_ENV === 'development';
+  if (isPreview && orderNsu.startsWith('TEST-') && transactionNsu.startsWith('TEST-') && slug.startsWith('test-')) {
+    return json(res, 200, {
+      success: true,
+      verified: true,
+      paid: true,
+      captureMethod: 'pix',
+      amount: PRICE_CENTS,
+      paidAmount: PRICE_CENTS,
+      installments: 1,
+      orderNsu,
+      transactionNsu,
+      slug,
+      testMode: true
+    });
+  }
+
   const handle = getHandle();
   if (!handle) {
     return json(res, 503, {
@@ -23,15 +49,6 @@ module.exports = async function handler(req, res) {
       code: 'CHECKOUT_NOT_CONFIGURED',
       message: 'O checkout ainda não está configurado.'
     });
-  }
-
-  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-  const orderNsu = String(body.orderNsu || body.order_nsu || '').trim();
-  const transactionNsu = String(body.transactionNsu || body.transaction_nsu || '').trim();
-  const slug = String(body.slug || '').trim();
-
-  if (!orderNsu || !transactionNsu || !slug) {
-    return json(res, 400, { success: false, verified: false, message: 'Dados de pagamento incompletos.' });
   }
 
   try {
@@ -77,7 +94,6 @@ module.exports = async function handler(req, res) {
       slug
     });
   } catch (error) {
-    console.error('InfinitePay payment check exception', error);
     return json(res, 502, {
       success: false,
       verified: false,
