@@ -1,7 +1,8 @@
 const PRICE_CENTS = 4990;
+const FALLBACK_HANDLE = 'lessence';
 
 function getHandle() {
-  return (process.env.INFINITEPAY_HANDLE || '').replace(/^\$/, '').trim();
+  return (process.env.INFINITEPAY_HANDLE || FALLBACK_HANDLE).replace(/^\$/, '').trim();
 }
 
 function json(res, status, payload) {
@@ -77,6 +78,11 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('InfinitePay payment check exception', error);
-    return json(res, 502, { success: false, verified: false, message: 'Não foi possível confirmar o PIX agora. Tente novamente.' });
+    return json(res, 502, {
+      success: false,
+      verified: false,
+      code: 'INFINITEPAY_CONNECTION_ERROR',
+      message: 'Não foi possível confirmar o PIX agora. Tente novamente.'
+    });
   }
 };
