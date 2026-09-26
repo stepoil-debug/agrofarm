@@ -124,7 +124,8 @@ html = html
   .replaceAll('Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.', 'Use PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente e a InfinitePay confirma o pagamento automaticamente.')
   .replaceAll('PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.', 'PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente. Após a confirmação, você envia a história completa.')
   .replaceAll('<h2>Sua música personalizada a partir de R$ 49,90</h2>', '<h2>Sua música personalizada por R$ 49,90</h2>')
-  .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>12x R$ 4,99</strong><span>no cartão + juros</span>');
+  .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>12x R$ 4,99</strong><span>no cartão + juros</span>')
+  .replaceAll('<button class="button button-primary plan-button" type="button">Escolher pagamento</button>', '<button class="button button-primary plan-button" type="button" onclick="const m=document.getElementById(\'order-modal\');m?.classList.add(\'is-open\');m?.setAttribute(\'aria-hidden\',\'false\');document.body.classList.add(\'modal-open\');return false;">Escolher pagamento</button>');
 
 const faqHtml = `    <section class="section faq-section" id="duvidas"><div class="section-heading left"><span class="eyebrow">DÚVIDAS FREQUENTES</span><h2>Pagamento, revisões e produção</h2></div><div class="faq-list">${faqItems.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('')}</div></section>`;
 html = html.replace(/    <section class="section faq-section" id="duvidas">[\s\S]*?    <\/section>/, faqHtml);
