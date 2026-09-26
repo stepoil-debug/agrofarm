@@ -6,8 +6,8 @@ Página de vendas para músicas personalizadas a partir da história de casais.
 
 - **Canção Express — R$ 49,90**
 - **Canção Especial — R$ 119,90**
-- Atendimento e fechamento pelo WhatsApp após a confirmação do pagamento
-- Pagamento por PIX via checkout da InfinitePay
+- Atendimento pelo WhatsApp após a confirmação do pagamento
+- Pagamento por PIX de R$ 49,90 ou cartão em 12x de R$ 7,90 (total de R$ 94,80) via checkout da InfinitePay
 - Sem login ou banco de dados nesta primeira versão
 
 ## Configuração de produção
@@ -22,7 +22,7 @@ META_PIXEL_ID=opcional
 GA_MEASUREMENT_ID=opcional
 ```
 
-O número deve conter somente dígitos, com DDI e DDD. Sem `WHATSAPP_NUMBER`, o site bloqueia o envio automático para evitar que pedidos sejam direcionados ao contato errado.
+O número deve conter somente dígitos, com DDI e DDD. Sem `WHATSAPP_NUMBER`, o site bloqueia a abertura do WhatsApp para evitar que pedidos sejam direcionados ao contato errado. O site abre uma mensagem preenchida após a confirmação; o cliente confirma o envio no WhatsApp.
 
 ## Publicação
 

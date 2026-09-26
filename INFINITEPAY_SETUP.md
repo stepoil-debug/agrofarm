@@ -3,14 +3,16 @@
 ## Fluxo implementado
 
 1. Cliente inicia o pedido informando apenas nome e WhatsApp.
-2. O backend cria um checkout InfinitePay no valor fixo de R$ 49,90 (4990 centavos).
-3. O cliente paga via PIX.
+2. O backend cria um checkout InfinitePay conforme a opção escolhida:
+   - PIX: R$ 49,90 (4990 centavos)
+   - Cartão: 12x de R$ 7,90, total de R$ 94,80 (9480 centavos)
+3. O cliente paga via PIX ou cartão de crédito.
 4. A InfinitePay redireciona para `https://cancao.dflabs.app/?pagamento=retorno`.
 5. O backend chama `payment_check` e só libera o formulário completo quando confirma:
    - `success = true`
    - `paid = true`
-   - `amount = 4990`
-   - `capture_method = pix`
+   - `amount` corresponde ao plano escolhido
+   - `capture_method` corresponde à forma escolhida (`pix` ou `credit_card`)
 6. O cliente envia a história completa.
 7. O atendimento cria a letra.
 8. O cliente pode solicitar até 3 rodadas de edição da letra.
@@ -26,16 +28,17 @@ INFINITEPAY_HANDLE=sua_infinite_tag_sem_o_cifrao
 
 A InfiniteTag é pública e deve ser informada sem `$`.
 
-## InfinitePay: deixar somente PIX
+## InfinitePay: habilitar PIX e cartão
 
 No app ou painel InfinitePay:
 
 Vendas > Checkout > Configurações > Meios de Pagamentos
 
 - PIX: ativado
-- Cartão de crédito: desativado
+- Cartão de crédito: ativado
+- Configure o cartão para permitir até 12 parcelas e confira no checkout as taxas aplicadas.
 
-O backend também rejeita qualquer retorno que não tenha `capture_method = pix`.
+O backend também rejeita qualquer retorno cujo método ou valor não correspondam ao plano escolhido.
 
 ## Checkout Integrado
 
@@ -51,7 +54,9 @@ Criar a variável pública de configuração na Vercel:
 WHATSAPP_NUMBER=55DDDNÚMERO
 ```
 
-O valor deve conter somente números, incluindo DDI e DDD. Se estiver vazio, o botão de envio será bloqueado para evitar perda de pedidos.
+O valor deve conter somente números, incluindo DDI e DDD. Se estiver vazio, o envio para o atendimento será bloqueado para evitar perda de pedidos.
+
+Após a confirmação server-side, o site tenta abrir o WhatsApp com a mensagem e a história preenchidas. O cliente ainda precisa tocar em **Enviar** no WhatsApp; envio totalmente automático exige a WhatsApp Cloud API e credenciais próprias.
 
 ## Variáveis opcionais
 

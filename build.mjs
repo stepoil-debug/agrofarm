@@ -24,7 +24,7 @@ html = html.replace(/\r\n/g, '\n');
 
 html = html
   .replace(/<title>.*?<\/title>/s, '<title>Música Personalizada por R$ 49,90 | Canção de Nós</title>')
-  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Crie uma música personalizada por R$ 49,90. Pague por PIX, envie sua história, aprove a letra com até 3 edições e só depois geramos a música." />')
+  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Crie uma música personalizada a partir de R$ 49,90 no PIX ou parcele em até 12x de R$ 7,90 no cartão. Aprove a letra antes da música." />')
   .replace('<meta name="theme-color" content="#681c43" />', '<meta name="theme-color" content="#681c43" />\n  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />\n  <meta name="author" content="Canção de Nós" />\n  <link rel="canonical" href="https://cancao.dflabs.app/" />')
   .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="Música Personalizada por R$ 49,90 | Canção de Nós" />')
   .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Sua história vira letra. Você pode pedir até 3 edições e só após aprovar geramos a música." />')
@@ -37,11 +37,11 @@ html = html
   .replace('<a class="header-cta" href="#planos">Homenagear meu amor</a>', '<a class="header-cta" href="#planos" data-start-order>Começar — R$ 49,90</a>')
   .replace('<span>✓ PIX ou link InfinitePay</span>', '<span>✓ PIX pela InfinitePay</span>')
   .replace('<span>✓ Entrega digital</span>', '<span>✓ Até 3 edições da letra</span>')
-  .replace('<div class="announcement">\n    <span>🎂 O aniversário está chegando?</span>\n    <strong>Confirme o prazo de entrega pelo WhatsApp.</strong>\n  </div>', '<div class="announcement">\n    <span>🎵 Sua história merece cuidado.</span>\n    <strong>R$ 49,90 no PIX • até 3 edições da letra antes da música.</strong>\n  </div>');
+  .replace('<div class="announcement">\n    <span>🎂 O aniversário está chegando?</span>\n    <strong>Confirme o prazo de entrega pelo WhatsApp.</strong>\n  </div>', '<div class="announcement">\n    <span>🎵 Sua história merece cuidado.</span>\n    <strong>R$ 49,90 no PIX • ou 12x de R$ 7,90 no cartão.</strong>\n  </div>');
 
 const faqItems = [
-  ['Como funciona o pagamento?', 'O valor é único: R$ 49,90. O pagamento é feito somente por PIX no checkout seguro da InfinitePay. O formulário completo só é liberado depois que o pagamento for confirmado.'],
-  ['Eu pago antes de contar toda a história?', 'Sim. Primeiro você informa apenas seu nome e WhatsApp, realiza o PIX e volta automaticamente para o site. Depois da confirmação, o formulário completo da história é liberado.'],
+  ['Como funciona o pagamento?', 'Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito em até 12x de R$ 7,90, totalizando R$ 94,80. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.'],
+  ['Eu pago antes de contar toda a história?', 'Sim. Primeiro você informa apenas seu nome e WhatsApp, escolhe a forma de pagamento e volta automaticamente para o site. Depois da confirmação, o formulário completo da história é liberado.'],
   ['Posso alterar a letra antes da música ser gerada?', 'Sim. Você pode solicitar até 3 edições da letra. A produção do áudio só começa depois da sua aprovação final da letra.'],
   ['O que conta como uma edição?', 'Uma edição é uma rodada de ajustes solicitados sobre a letra enviada para aprovação. Você pode reunir várias mudanças na mesma rodada para aproveitar melhor cada revisão.'],
   ['Quando a música é gerada?', 'Somente depois que você aprovar a letra final. Assim evitamos gerar uma música com versos que você ainda gostaria de mudar.'],
@@ -63,7 +63,7 @@ const structuredData = `
         description: 'Música personalizada criada a partir da história do casal, com até 3 edições da letra antes da produção do áudio.',
         image: 'https://images.pexels.com/photos/6800136/pexels-photo-6800136.jpeg?auto=compress&cs=tinysrgb&w=1200',
         brand: { '@type': 'Brand', name: 'Canção de Nós' },
-        offers: { '@type': 'Offer', name: 'Canção de Nós', url: `${canonical}#planos`, priceCurrency: 'BRL', price: '49.90', availability: 'https://schema.org/InStock' }
+        offers: { '@type': 'AggregateOffer', name: 'Canção de Nós', url: `${canonical}#planos`, priceCurrency: 'BRL', lowPrice: '49.90', highPrice: '94.80', offerCount: 2, availability: 'https://schema.org/InStock' }
       },
       { '@type': 'FAQPage', mainEntity: faqItems.map(([name, text]) => ({ '@type': 'Question', name, acceptedAnswer: { '@type': 'Answer', text } })) }
     ]
@@ -91,7 +91,7 @@ const processSection = `    <section class="section section-soft" id="como-funci
       <div class="section-heading"><span class="eyebrow">SEM DESPERDIÇAR SEU TEMPO</span><h2>Primeiro você aprova a letra. Só depois a música é gerada.</h2><p>Um fluxo simples para garantir que nomes, datas e sentimentos estejam certos antes da produção final.</p></div>
       <div class="steps process-five">
         <article class="step-card"><span class="step-number">01</span><h3>Inicie o pedido</h3><p>Informe apenas seu nome e WhatsApp para identificarmos o pedido.</p></article>
-        <article class="step-card"><span class="step-number">02</span><h3>Pague R$ 49,90 no PIX</h3><p>Você é levado ao checkout seguro da InfinitePay. O site confirma o pagamento automaticamente.</p></article>
+        <article class="step-card"><span class="step-number">02</span><h3>Escolha como pagar</h3><p>Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.</p></article>
         <article class="step-card"><span class="step-number">03</span><h3>Conte sua história</h3><p>Com o PIX confirmado, informe nomes, momentos, estilo, voz, apelidos e tudo que deve aparecer.</p></article>
         <article class="step-card"><span class="step-number">04</span><h3>Aprove a letra</h3><p>Receba a letra escrita e solicite até 3 edições para deixar cada detalhe do seu jeito.</p></article>
         <article class="step-card"><span class="step-number">05</span><h3>Geramos a música</h3><p>Somente após sua aprovação final da letra começa a geração da música e a entrega digital.</p></article>
@@ -100,8 +100,8 @@ const processSection = `    <section class="section section-soft" id="como-funci
 html = html.replace(/    <section class="section section-soft" id="como-funciona">[\s\S]*?    <\/section>/, processSection);
 
 const offerSection = `    <section class="section plans-section" id="planos">
-      <div class="section-heading"><span class="eyebrow">UMA ÚNICA OFERTA. SEM COMPLICAÇÃO.</span><h2>Sua música personalizada por R$ 49,90</h2><p>Pagamento somente via PIX pela InfinitePay. Após a confirmação, você envia a história completa.</p></div>
-      <div class="single-offer"><article class="price-card featured"><span class="popular-badge">VALOR ÚNICO</span><div><span class="plan-tag">MÚSICA PERSONALIZADA COMPLETA</span><h3>Canção de Nós</h3><p class="plan-description">Sua história organizada primeiro em uma letra para você revisar e aprovar antes da geração da música.</p></div><div class="price"><small>R$</small>49<sup>,90</sup></div><span class="payment-pill">✓ PIX pela InfinitePay</span><ul><li>Letra criada a partir da sua história</li><li>Nome, apelidos e momentos marcantes</li><li>Escolha do estilo musical</li><li>Preferência de voz</li><li>Até 3 edições da letra</li><li>Música gerada somente após sua aprovação</li><li>Entrega digital da música final</li></ul><button class="button button-primary plan-button" type="button">Presenteie por R$ 49,90</button></article></div>
+      <div class="section-heading"><span class="eyebrow">ESCOLHA A FORMA DE PAGAMENTO</span><h2>Sua música personalizada a partir de R$ 49,90</h2><p>PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90, totalizando R$ 94,80. Após a confirmação, você envia a história completa.</p></div>
+      <div class="single-offer"><article class="price-card featured"><span class="popular-badge">MÚSICA PERSONALIZADA COMPLETA</span><div><span class="plan-tag">CANÇÃO DE NÓS</span><h3>Sua história vira canção</h3><p class="plan-description">Sua história organizada primeiro em uma letra para você revisar e aprovar antes da geração da música.</p></div><div class="offer-payment-options"><div><strong>R$ 49,90</strong><span>no PIX</span></div><div><strong>12x R$ 7,90</strong><span>no cartão • total R$ 94,80</span></div></div><span class="payment-pill">✓ PIX ou cartão pela InfinitePay</span><ul><li>Letra criada a partir da sua história</li><li>Nome, apelidos e momentos marcantes</li><li>Escolha do estilo musical</li><li>Preferência de voz</li><li>Até 3 edições da letra</li><li>Música gerada somente após sua aprovação</li><li>Entrega digital da música final</li></ul><button class="button button-primary plan-button" type="button">Escolher pagamento</button></article></div>
       <p class="payment-note"><strong>Importante:</strong> as 3 edições são da letra escrita. Depois que você aprovar a letra e autorizar a geração da música, a produção do áudio é iniciada.</p>
     </section>`;
 html = html.replace(/    <section class="section plans-section" id="planos">[\s\S]*?    <\/section>/, offerSection);
@@ -121,7 +121,7 @@ if (modalStart !== -1 && floatingStart !== -1) {
     <div class="modal-backdrop" data-close-modal></div>
     <div class="modal-card payment-modal">
       <button class="modal-close" type="button" data-close-modal aria-label="Fechar">×</button>
-      <span class="eyebrow">MÚSICA PERSONALIZADA • R$ 49,90</span><h2 id="modal-title">Comece seu pedido</h2>
+      <span class="eyebrow">MÚSICA PERSONALIZADA • A PARTIR DE R$ 49,90</span><h2 id="modal-title">Comece seu pedido</h2>
       <div class="checkout-flow">
         <section class="checkout-step is-active" id="checkout-payment-step">
           <div class="checkout-intro"><div class="checkout-price"><strong>R$ 49,90</strong><span>pagamento único</span></div><div class="checkout-badges"><span class="checkout-badge">✓ PIX pela InfinitePay</span><span class="checkout-badge">✓ Até 3 edições da letra</span><span class="checkout-badge">✓ Áudio só após aprovação</span></div><p>Para não tomar seu tempo agora, informe somente seu nome e WhatsApp. Depois do PIX confirmado, você volta para preencher a história completa.</p></div>

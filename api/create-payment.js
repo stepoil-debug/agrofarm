@@ -1,6 +1,17 @@
 const { randomBytes } = require('node:crypto');
 
-const PRICE_CENTS = 4990;
+const PAYMENT_PLANS = {
+  pix: {
+    key: 'pix',
+    priceCents: 4990,
+    description: 'Canção de Nós - Música Personalizada - PIX'
+  },
+  card: {
+    key: 'card',
+    priceCents: 9480,
+    description: 'Canção de Nós - Música Personalizada - Cartão 12x de R$ 7,90'
+  }
+};
 const SITE_URL = 'https://cancao.dflabs.app';
 function getHandle() {
   return String(process.env.INFINITEPAY_HANDLE || '').replace(/^\$/, '').trim();
@@ -43,12 +54,13 @@ module.exports = async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   const customerName = String(body.customerName || '').trim().slice(0, 100);
   const customerPhone = String(body.customerPhone || '').replace(/\D/g, '').slice(0, 20);
+  const paymentPlan = PAYMENT_PLANS[String(body.paymentPlan || 'pix')] || PAYMENT_PLANS.pix;
 
   if (customerName.length < 2 || customerPhone.length < 10) {
     return json(res, 400, { success: false, message: 'Informe seu nome e um WhatsApp válido.' });
   }
 
-  const orderNsu = `cancao-${Date.now()}-${randomBytes(4).toString('hex')}`;
+  const orderNsu = `cancao-${paymentPlan.key}-${Date.now()}-${randomBytes(4).toString('hex')}`;
 
   const payload = {
     handle,
@@ -57,8 +69,8 @@ module.exports = async function handler(req, res) {
     items: [
       {
         quantity: 1,
-        price: PRICE_CENTS,
-        description: 'Canção de Nós - Música Personalizada'
+        price: paymentPlan.priceCents,
+        description: paymentPlan.description
       }
     ]
   };
@@ -85,7 +97,8 @@ module.exports = async function handler(req, res) {
       success: true,
       checkoutUrl: data.url,
       orderNsu,
-      amount: PRICE_CENTS
+      amount: paymentPlan.priceCents,
+      paymentPlan: paymentPlan.key
     });
   } catch (error) {
     console.error('InfinitePay create link exception', error);

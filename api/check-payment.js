@@ -1,4 +1,7 @@
-const PRICE_CENTS = 4990;
+const PAYMENT_PLANS = {
+  pix: { key: 'pix', priceCents: 4990, captureMethod: 'pix' },
+  card: { key: 'card', priceCents: 9480, captureMethod: 'credit_card' }
+};
 function getHandle() {
   return String(process.env.INFINITEPAY_HANDLE || '').replace(/^\$/, '').trim();
 }
@@ -32,6 +35,9 @@ module.exports = async function handler(req, res) {
     return json(res, 400, { success: false, verified: false, message: 'Dados de pagamento incompletos.' });
   }
 
+  const planKey = orderNsu.startsWith('cancao-card-') ? 'card' : 'pix';
+  const paymentPlan = PAYMENT_PLANS[planKey];
+
   try {
     const response = await fetch('https://api.checkout.infinitepay.io/payment_check', {
       method: 'POST',
@@ -46,8 +52,8 @@ module.exports = async function handler(req, res) {
 
     const data = await response.json().catch(() => ({}));
     const amount = Number(data.amount || 0);
-    const isPix = String(data.capture_method || '').toLowerCase() === 'pix';
-    const verified = response.ok && data.success === true && data.paid === true && amount === PRICE_CENTS && isPix;
+    const captureMethod = String(data.capture_method || '').toLowerCase();
+    const verified = response.ok && data.success === true && data.paid === true && amount === paymentPlan.priceCents && captureMethod === paymentPlan.captureMethod;
 
     if (!verified) {
       return json(res, 200, {
@@ -56,9 +62,9 @@ module.exports = async function handler(req, res) {
         paid: Boolean(data.paid),
         captureMethod: data.capture_method || null,
         amount,
-        message: data.paid && !isPix
-          ? 'O pedido precisa ser pago via PIX.'
-          : 'Pagamento PIX ainda não confirmado.'
+        message: data.paid && captureMethod !== paymentPlan.captureMethod
+          ? `Este pedido precisa ser pago pela opção ${planKey === 'card' ? 'cartão de crédito' : 'PIX'}.`
+          : `Pagamento ${planKey === 'card' ? 'no cartão' : 'PIX'} ainda não confirmado.`
       });
     }
 
@@ -66,7 +72,7 @@ module.exports = async function handler(req, res) {
       success: true,
       verified: true,
       paid: true,
-      captureMethod: 'pix',
+      captureMethod,
       amount,
       paidAmount: Number(data.paid_amount || amount),
       installments: Number(data.installments || 1),

@@ -1,8 +1,11 @@
 (() => {
   const STORAGE_KEY = 'cancao_order_v6';
   const PAYMENT_KEY = 'cancao_verified_payment_v2';
-  const PRICE_LABEL = 'R$ 49,90';
-  const PRICE_VALUE = 49.90;
+  const PAYMENT_PLANS = {
+    pix: { key: 'pix', label: 'R$ 49,90', value: 49.90, cents: 4990, title: 'PIX à vista', detail: 'Pagamento imediato, sem juros' },
+    card: { key: 'card', label: '12× R$ 7,90', value: 94.80, cents: 9480, title: 'Cartão de crédito', detail: 'Total de R$ 94,80 em até 12 parcelas' },
+  };
+  const DEFAULT_PLAN = PAYMENT_PLANS.pix;
   const modal = document.querySelector('#order-modal');
   let activeCheckoutUrl = '';
   let checkoutWindow = null;
@@ -35,6 +38,7 @@
   const getOrder = () => safeGet(STORAGE_KEY);
   const saveVerifiedPayment = (payment) => safeSet(PAYMENT_KEY, payment);
   const getVerifiedPayment = () => safeGet(PAYMENT_KEY);
+  const getPlan = (order = {}) => PAYMENT_PLANS[order.paymentPlan] || DEFAULT_PLAN;
 
   function clearVerifiedPayment() {
     try { localStorage.removeItem(PAYMENT_KEY); } catch {}
@@ -59,13 +63,27 @@
     return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
   }
 
+  function autoOpenWhatsApp(order, payment) {
+    const key = `cancao_whatsapp_auto_opened_v1:${payment.orderNsu || ''}:${payment.transactionNsu || ''}`;
+    let alreadyOpened = false;
+    try { alreadyOpened = sessionStorage.getItem(key) === '1'; } catch {}
+    if (alreadyOpened) return;
+    const url = makeWhatsAppUrl(buildOrderMessage(order, payment));
+    if (!url) return;
+    try { sessionStorage.setItem(key, '1'); } catch {}
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
   function buildOrderMessage(order, payment) {
+    const plan = getPlan(order);
+    const method = String(payment.captureMethod || '').toLowerCase() === 'credit_card' ? 'Cartão de crédito' : 'PIX';
     return [
-      'Olá! Meu pagamento PIX de R$ 49,90 foi confirmado pela InfinitePay e quero enviar meu pedido de música personalizada. 🎵❤️',
+      `Olá! Meu pagamento de ${plan.label} foi confirmado pela InfinitePay e quero enviar meu pedido de música personalizada. 🎵❤️`,
       '',
       `*Pedido:* ${payment.orderNsu || 'confirmado'}`,
       `*Transação:* ${payment.transactionNsu || 'confirmada'}`,
-      '*Pagamento:* PIX confirmado pela InfinitePay ✅',
+      `*Pagamento:* ${method} confirmado pela InfinitePay ✅`,
+      `*Plano:* ${plan.title} — ${plan.label}`,
       payment.receiptUrl ? `*Comprovante:* ${payment.receiptUrl}` : '',
       '',
       `*Meu nome:* ${order.customerName}`,
@@ -94,16 +112,16 @@
     card.classList.add('payment-modal');
     card.innerHTML = `
       <button class="modal-close" type="button" data-ip-close aria-label="Fechar">×</button>
-      <span class="eyebrow">MÚSICA PERSONALIZADA • ${PRICE_LABEL}</span>
+      <span class="eyebrow">MÚSICA PERSONALIZADA • A PARTIR DE R$ 49,90</span>
       <h2 id="modal-title">Conte a história de vocês</h2>
       <div class="checkout-intro">
-        <div class="checkout-price"><strong>${PRICE_LABEL}</strong><span>pagamento único via PIX</span></div>
+        <div class="checkout-price"><strong>A partir de R$ 49,90</strong><span>escolha PIX ou cartão parcelado</span></div>
         <div class="checkout-badges">
           <span class="checkout-badge">✓ Preencha tudo primeiro</span>
-          <span class="checkout-badge">✓ PIX pela InfinitePay</span>
+          <span class="checkout-badge">✓ PIX ou cartão pela InfinitePay</span>
           <span class="checkout-badge">✓ Até 3 edições da letra</span>
         </div>
-        <p>Preencha a homenagem e finalize o PIX em uma janela segura da InfinitePay. Esta página permanecerá aberta para você voltar automaticamente após o pagamento.</p>
+        <p>Preencha a homenagem e finalize o pagamento em uma janela segura da InfinitePay. Esta página permanecerá aberta para você voltar automaticamente após a aprovação.</p>
       </div>
       <form id="ip-details-form">
         <div class="form-grid">
@@ -116,11 +134,16 @@
           <label>Estilo musical<select name="musicStyle" required><option value="">Selecione</option><option>Sertanejo romântico</option><option>Pagode romântico</option><option>Pop</option><option>MPB</option><option>Gospel</option><option>Forró</option><option>Rock romântico</option><option>Outro estilo</option></select></label>
           <label>Preferência de voz<select name="voice" required><option value="">Selecione</option><option>Voz masculina</option><option>Voz feminina</option><option>Sem preferência</option></select></label>
         </div>
+        <fieldset class="payment-choice">
+          <legend>Como você prefere pagar?</legend>
+          <label class="payment-choice-option"><input type="radio" name="paymentPlan" value="pix" checked /><span><strong>${PAYMENT_PLANS.pix.title}</strong><small>${PAYMENT_PLANS.pix.label} • ${PAYMENT_PLANS.pix.detail}</small></span></label>
+          <label class="payment-choice-option"><input type="radio" name="paymentPlan" value="card" /><span><strong>${PAYMENT_PLANS.card.title}</strong><small>${PAYMENT_PLANS.card.label} • ${PAYMENT_PLANS.card.detail}</small></span></label>
+        </fieldset>
         <label>A história de vocês<textarea name="story" required minlength="40" maxlength="3000" placeholder="Como vocês se conheceram? Quais momentos, lugares, dificuldades, conquistas, viagens, apelidos ou frases não podem faltar?"></textarea></label>
         <label>O que você deseja que essa pessoa sinta ao ouvir? <span class="optional">(opcional)</span><textarea name="message" maxlength="1000" placeholder="Ex.: Quero que ela se sinta amada, valorizada e saiba o quanto é importante para mim."></textarea></label>
         <label class="consent"><input type="checkbox" name="revisionConsent" required /><span>Entendi que tenho direito a até 3 edições da letra e que a música só será gerada depois da minha aprovação final.</span></label>
         <label class="consent"><input type="checkbox" name="dataConsent" required /><span>Autorizo o envio dos dados e da história ao atendimento da Canção de Nós pelo WhatsApp para produzir e entregar o pedido. <a href="/privacidade" target="_blank" rel="noopener">Ver privacidade</a></span></label>
-        <button class="button button-primary form-submit" type="submit" id="ip-pay-button">Pagar com PIX — ${PRICE_LABEL}</button>
+        <button class="button button-primary form-submit" type="submit" id="ip-pay-button">Pagar com PIX — ${PAYMENT_PLANS.pix.label}</button>
         <div class="checkout-error" id="ip-error" role="alert"></div>
         <div class="checkout-loading" id="ip-loading"><span class="checkout-spinner"></span><span>Preparando pagamento seguro...</span></div>
       </form>
@@ -133,6 +156,11 @@
         const field = form?.elements?.[name];
         if (field && saved[name] != null) field.value = saved[name];
       });
+      const savedPlan = form?.elements?.paymentPlan;
+      if (savedPlan && saved.paymentPlan) {
+        savedPlan.value = saved.paymentPlan;
+        savedPlan.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     }
 
     const dateInput = card.querySelector('[name="celebrationDate"]');
@@ -146,21 +174,31 @@
     window.CancaoPublicConfig?.ready?.then(applySla);
 
     card.querySelector('[data-ip-close]')?.addEventListener('click', closeModal);
+    const planInputs = [...card.querySelectorAll('input[name="paymentPlan"]')];
+    const payButton = card.querySelector('#ip-pay-button');
+    const updatePlanLabel = () => {
+      const plan = PAYMENT_PLANS[planInputs.find((input) => input.checked)?.value] || DEFAULT_PLAN;
+      if (payButton) payButton.textContent = `Pagar com ${plan.key === 'card' ? 'cartão' : 'PIX'} — ${plan.label}`;
+    };
+    planInputs.forEach((input) => input.addEventListener('change', updatePlanLabel));
+    updatePlanLabel();
     card.querySelector('#ip-details-form')?.addEventListener('submit', startInfinitePayCheckout);
   }
 
   function renderCheckoutWaiting(checkoutUrl = activeCheckoutUrl) {
     const card = modal.querySelector('.modal-card');
     if (!card) return;
+    const order = getOrder() || {};
+    const plan = getPlan(order);
     card.innerHTML = `
       <button class="modal-close" type="button" data-ip-close aria-label="Fechar">×</button>
       <span class="eyebrow">PAGAMENTO SEGURO • INFINITEPAY</span>
-      <h2>Finalize seu PIX</h2>
+      <h2>Finalize seu pagamento</h2>
       <div class="payment-confirmed-card" style="background:#fff8e8;border-color:rgba(140,100,30,.18)">
         <strong>A janela segura da InfinitePay foi aberta.</strong>
-        <p>O Canção de Nós permanece aberto aqui. Depois de pagar, toque em <strong>Continuar</strong> na InfinitePay. Nós identificaremos o pagamento automaticamente e mostraremos o botão para enviar os dados da música.</p>
+        <p>O Canção de Nós permanece aberto aqui. Depois de pagar, toque em <strong>Continuar</strong> na InfinitePay. Nós identificaremos a aprovação automaticamente e mostraremos o botão para enviar os dados da música.</p>
       </div>
-      <div class="order-summary-mini"><div><strong>Música personalizada</strong><br><span>PIX com confirmação automática</span></div><strong>${PRICE_LABEL}</strong></div>
+      <div class="order-summary-mini"><div><strong>${plan.title}</strong><br><span>${plan.detail}</span></div><strong>${plan.label}</strong></div>
       <div class="payment-return-actions">
         <button class="button button-primary" type="button" id="ip-reopen-checkout">Abrir pagamento</button>
         <button class="button button-ghost" type="button" id="ip-edit-order">Editar dados</button>
@@ -183,10 +221,10 @@
     card.innerHTML = `
       <button class="modal-close" type="button" data-ip-close aria-label="Fechar">×</button>
       <span class="eyebrow">CONFIRMAÇÃO DE PAGAMENTO</span>
-      <h2>Confirmando seu PIX</h2>
+      <h2>Confirmando seu pagamento</h2>
       <div class="payment-confirmed-card" style="background:#fff8e8;border-color:rgba(140,100,30,.18)">
         <strong>${message}</strong>
-        <p>Aguarde alguns segundos. O botão para enviar os dados só será liberado depois que a InfinitePay confirmar o recebimento de ${PRICE_LABEL}.</p>
+        <p>Aguarde alguns segundos. O botão para enviar os dados só será liberado depois que a InfinitePay confirmar o recebimento.</p>
       </div>
       <div class="checkout-loading is-visible"><span class="checkout-spinner"></span><span>Validando pagamento...</span></div>
       <div class="checkout-error" id="ip-return-error" role="alert"></div>
@@ -198,22 +236,26 @@
   function renderPaid(order, payment) {
     const card = modal.querySelector('.modal-card');
     if (!card) return;
+    const plan = getPlan(order);
+    const method = String(payment.captureMethod || '').toLowerCase() === 'credit_card' ? 'Cartão de crédito' : 'PIX';
+    const installmentText = method === 'Cartão de crédito' && Number(payment.installments || 1) > 1 ? ` • ${payment.installments}x` : '';
     card.innerHTML = `
       <button class="modal-close" type="button" data-ip-close aria-label="Fechar">×</button>
       <span class="eyebrow">PAGAMENTO CONFIRMADO</span>
-      <h2>Seu PIX foi confirmado ✓</h2>
+      <h2>Pagamento confirmado ✓</h2>
       <div class="payment-confirmed-card">
-        <span class="checkout-badge success">✓ InfinitePay confirmou ${PRICE_LABEL}</span>
+        <span class="checkout-badge success">✓ InfinitePay confirmou ${plan.label}</span>
         <strong>Pagamento identificado. Seus dados estão prontos para envio.</strong>
         <p>Agora é só enviar os dados da música. Primeiro criaremos a letra e você poderá solicitar até 3 edições antes da geração do áudio.</p>
       </div>
-      <div class="order-summary-mini"><div><strong>Pedido ${payment.orderNsu}</strong><br><span>${order.recipientName} • ${order.musicStyle}</span></div><strong>${PRICE_LABEL}</strong></div>
+      <div class="order-summary-mini"><div><strong>Pedido ${payment.orderNsu}</strong><br><span>${order.recipientName} • ${method}${installmentText}</span></div><strong>${plan.label}</strong></div>
       ${payment.receiptUrl ? `<a class="button button-outline" href="${payment.receiptUrl}" target="_blank" rel="noopener">Ver comprovante da InfinitePay</a>` : ''}
-      <button class="button button-primary form-submit" type="button" id="ip-send-order">Enviar dados da música</button>
+      <button class="button button-primary form-submit" type="button" id="ip-send-order">Abrir WhatsApp e enviar dados</button>
       <div class="checkout-error" id="ip-whatsapp-error" role="alert"></div>
-      <p class="form-help">Este botão só aparece depois da confirmação real do PIX pela InfinitePay.</p>
+      <p class="form-help">Após a confirmação, o WhatsApp é aberto com os dados preenchidos. Se o navegador bloquear a abertura, use o botão acima e toque em enviar.</p>
     `;
     card.querySelector('[data-ip-close]')?.addEventListener('click', closeModal);
+    setTimeout(() => autoOpenWhatsApp(order, payment), 0);
     card.querySelector('#ip-send-order')?.addEventListener('click', async () => {
       const button = card.querySelector('#ip-send-order');
       const errorBox = card.querySelector('#ip-whatsapp-error');
@@ -228,7 +270,7 @@
         }
         return;
       }
-      track('Lead', { content_name: 'Pedido pago enviado ao WhatsApp', value: PRICE_VALUE, currency: 'BRL' });
+      track('Lead', { content_name: 'Pedido pago enviado ao WhatsApp', value: plan.value, currency: 'BRL' });
       window.open(url, '_blank', 'noopener,noreferrer');
       button.disabled = false;
     });
@@ -236,7 +278,7 @@
     let alreadyTracked = false;
     try { alreadyTracked = sessionStorage.getItem('cancao_purchase_tracked_v1') === purchaseKey; } catch {}
     if (!alreadyTracked) {
-      track('Purchase', { content_name: 'Canção de Nós', value: PRICE_VALUE, currency: 'BRL' });
+    track('Purchase', { content_name: 'Canção de Nós', value: plan.value, currency: 'BRL' });
       try { sessionStorage.setItem('cancao_purchase_tracked_v1', purchaseKey); } catch {}
     }
   }
@@ -276,7 +318,7 @@
         await wait(1800);
       }
     }
-    throw new Error(lastResult?.message || 'O PIX ainda não foi confirmado pela InfinitePay.');
+    throw new Error(lastResult?.message || 'O pagamento ainda não foi confirmado pela InfinitePay.');
   }
 
   async function startInfinitePayCheckout(event) {
@@ -297,7 +339,8 @@
     order.savedAt = Date.now();
     saveOrder(order);
     clearVerifiedPayment();
-    track('InitiateCheckout', { content_name: 'Canção de Nós', value: PRICE_VALUE, currency: 'BRL' });
+    const selectedPlan = getPlan(order);
+    track('InitiateCheckout', { content_name: 'Canção de Nós', value: selectedPlan.value, currency: 'BRL' });
 
     checkoutWindow = openCheckoutWindow();
 
@@ -305,11 +348,11 @@
       const response = await fetch('/api/create-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerName: order.customerName, customerPhone: order.customerPhone }),
+        body: JSON.stringify({ customerName: order.customerName, customerPhone: order.customerPhone, paymentPlan: selectedPlan.key }),
       });
       const result = await response.json().catch(() => ({}));
       if ([404, 405, 501].includes(response.status)) {
-        throw new Error('A prévia local não executa a API do checkout. Publique as funções do site e configure o INFINITEPAY_HANDLE para testar o PIX.');
+        throw new Error('A prévia local não executa a API do checkout. Publique as funções do site e configure o INFINITEPAY_HANDLE para testar o pagamento.');
       }
       if (!response.ok || !result.success || !result.checkoutUrl) throw new Error(result.message || 'Não foi possível iniciar o pagamento pela InfinitePay.');
 
