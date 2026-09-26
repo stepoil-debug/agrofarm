@@ -8,7 +8,9 @@ const PAYMENT_PLANS = {
   },
   card: {
     key: 'card',
-    priceCents: 9480,
+    // A InfinitePay está repassando aproximadamente 20% de encargos ao comprador.
+    // R$ 79,00 + encargos resulta em aproximadamente R$ 94,80 (12x de R$ 7,90).
+    priceCents: 7900,
     description: 'Canção de Nós - Música Personalizada - Cartão 12x de R$ 7,90'
   }
 };

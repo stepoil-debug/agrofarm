@@ -5,7 +5,7 @@
 1. Cliente inicia o pedido informando apenas nome e WhatsApp.
 2. O backend cria um checkout InfinitePay conforme a opção escolhida:
    - PIX: R$ 49,90 (4990 centavos)
-   - Cartão: 12x de R$ 7,90, total de R$ 94,80 (9480 centavos)
+   - Cartão: checkout-base de R$ 79,00 (7900 centavos), para o cliente chegar aproximadamente a 12x de R$ 7,90 com as taxas atualmente repassadas pela InfinitePay
 3. O cliente paga via PIX ou cartão de crédito.
 4. A InfinitePay redireciona para `https://cancao.dflabs.app/?pagamento=retorno`.
 5. O backend chama `payment_check` e só libera o formulário completo quando confirma:
@@ -36,7 +36,7 @@ Vendas > Checkout > Configurações > Meios de Pagamentos
 
 - PIX: ativado
 - Cartão de crédito: ativado
-- Configure o cartão para permitir até 12 parcelas e confira no checkout as taxas aplicadas.
+- Como a conta está repassando as taxas, o checkout envia R$ 79,00 como valor-base. Confira no checkout se o cliente visualiza aproximadamente 12x de R$ 7,90. Se você escolher “Assumir taxas” na InfinitePay, este ajuste deixa de ser necessário e o valor-base deve voltar para R$ 94,80.
 
 O backend também rejeita qualquer retorno cujo método ou valor não correspondam ao plano escolhido.
 
