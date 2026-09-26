@@ -45,15 +45,23 @@ Vendas > Checkout > Configurações > Habilitar Checkout Integrado
 
 ## WhatsApp de recebimento
 
-No arquivo `script.js`, preencher:
+Criar a variável pública de configuração na Vercel:
 
-```js
-const SITE_CONFIG = {
-  whatsappNumber: "55DDDNÚMERO",
-};
+```text
+WHATSAPP_NUMBER=55DDDNÚMERO
 ```
 
-Enquanto o número estiver vazio, o navegador abre o seletor genérico do WhatsApp com a mensagem pronta, sem destinatário automático.
+O valor deve conter somente números, incluindo DDI e DDD. Se estiver vazio, o botão de envio será bloqueado para evitar perda de pedidos.
+
+## Variáveis opcionais
+
+```text
+DELIVERY_SLA=Prazo real de entrega
+META_PIXEL_ID=ID do Pixel da Meta
+GA_MEASUREMENT_ID=ID do Google Analytics 4
+```
+
+Os identificadores de analytics só são carregados quando configurados. Nenhum evento de compra é enviado com identificadores pessoais.
 
 ## Endpoints
 

@@ -15,8 +15,15 @@ for (const entry of entries) {
   const filePath = join('dist', entry.name);
   let html = await readFile(filePath, 'utf8');
 
-  if (!html.includes('audio.js')) {
-    html = html.replace('</body>', '  <script src="./audio.js" defer></script>\n</body>');
+  const scripts = [
+    ['public-config.js', '  <script src="./public-config.js" defer></script>'],
+    ['analytics.js', '  <script src="./analytics.js" defer></script>'],
+    ['audio.js', '  <script src="./audio.js" defer></script>'],
+  ];
+  for (const [needle, tag] of scripts) {
+    if (!html.includes(needle)) html = html.replace('</body>', `${tag}\n</body>`);
+  }
+  if (html !== await readFile(filePath, 'utf8')) {
     await writeFile(filePath, html, 'utf8');
     pagesUpdated += 1;
   }

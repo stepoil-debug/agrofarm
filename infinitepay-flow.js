@@ -2,6 +2,7 @@
   const STORAGE_KEY = 'cancao_order_v6';
   const PAYMENT_KEY = 'cancao_verified_payment_v2';
   const PRICE_LABEL = 'R$ 49,90';
+  const PRICE_VALUE = 49.90;
   const modal = document.querySelector('#order-modal');
   let activeCheckoutUrl = '';
   let checkoutWindow = null;
@@ -9,6 +10,10 @@
   if (!modal) return;
 
   const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+
+  const track = (event, parameters = {}) => {
+    window.CancaoAnalytics?.track(event, parameters);
+  };
 
   function safeSet(key, value) {
     const serialized = JSON.stringify(value);
@@ -49,7 +54,9 @@
   }
 
   function makeWhatsAppUrl(message) {
-    return `https://wa.me/?text=${encodeURIComponent(message)}`;
+    const number = String(window.CancaoPublicConfig?.get()?.whatsappNumber || '').replace(/\D/g, '');
+    if (!number) return '';
+    return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
   }
 
   function buildOrderMessage(order, payment) {
@@ -64,6 +71,8 @@
       `*Meu nome:* ${order.customerName}`,
       `*Meu WhatsApp:* ${order.customerPhone}`,
       `*Pessoa homenageada:* ${order.recipientName}`,
+      `*Ocasião:* ${order.occasion}`,
+      `*Data da comemoração:* ${order.celebrationDate}`,
       `*Como eu a chamo:* ${order.nickname || 'Não informado'}`,
       `*Estilo musical:* ${order.musicStyle}`,
       `*Preferência de voz:* ${order.voice}`,
@@ -101,6 +110,8 @@
           <label>Seu nome<input type="text" name="customerName" required maxlength="100" autocomplete="name" placeholder="Seu nome" /></label>
           <label>Seu WhatsApp<input type="tel" name="customerPhone" required maxlength="20" autocomplete="tel" placeholder="(22) 99999-9999" /></label>
           <label>Nome da pessoa homenageada<input type="text" name="recipientName" required maxlength="80" placeholder="Nome de quem receberá a música" /></label>
+          <label>Ocasião<select name="occasion" required><option value="">Selecione</option><option>Aniversário da pessoa amada</option><option>Aniversário de namoro</option><option>Aniversário de casamento</option><option>Pedido de casamento</option><option>Casamento</option><option>Reconciliação</option><option>Declaração surpresa</option><option>Outra ocasião</option></select></label>
+          <label>Data da comemoração<input type="date" name="celebrationDate" required /></label>
           <label>Como você chama essa pessoa? <span class="optional">(opcional)</span><input type="text" name="nickname" maxlength="80" placeholder="Amor, vida, apelido..." /></label>
           <label>Estilo musical<select name="musicStyle" required><option value="">Selecione</option><option>Sertanejo romântico</option><option>Pagode romântico</option><option>Pop</option><option>MPB</option><option>Gospel</option><option>Forró</option><option>Rock romântico</option><option>Outro estilo</option></select></label>
           <label>Preferência de voz<select name="voice" required><option value="">Selecione</option><option>Voz masculina</option><option>Voz feminina</option><option>Sem preferência</option></select></label>
@@ -108,6 +119,7 @@
         <label>A história de vocês<textarea name="story" required minlength="40" maxlength="3000" placeholder="Como vocês se conheceram? Quais momentos, lugares, dificuldades, conquistas, viagens, apelidos ou frases não podem faltar?"></textarea></label>
         <label>O que você deseja que essa pessoa sinta ao ouvir? <span class="optional">(opcional)</span><textarea name="message" maxlength="1000" placeholder="Ex.: Quero que ela se sinta amada, valorizada e saiba o quanto é importante para mim."></textarea></label>
         <label class="consent"><input type="checkbox" name="revisionConsent" required /><span>Entendi que tenho direito a até 3 edições da letra e que a música só será gerada depois da minha aprovação final.</span></label>
+        <label class="consent"><input type="checkbox" name="dataConsent" required /><span>Autorizo o envio dos dados e da história ao atendimento da Canção de Nós pelo WhatsApp para produzir e entregar o pedido. <a href="/privacidade" target="_blank" rel="noopener">Ver privacidade</a></span></label>
         <button class="button button-primary form-submit" type="submit" id="ip-pay-button">Pagar com PIX — ${PRICE_LABEL}</button>
         <div class="checkout-error" id="ip-error" role="alert"></div>
         <div class="checkout-loading" id="ip-loading"><span class="checkout-spinner"></span><span>Preparando pagamento seguro...</span></div>
@@ -117,11 +129,21 @@
     const saved = getOrder();
     if (saved) {
       const form = card.querySelector('#ip-details-form');
-      ['customerName','customerPhone','recipientName','nickname','musicStyle','voice','story','message'].forEach((name) => {
+      ['customerName','customerPhone','recipientName','occasion','celebrationDate','nickname','musicStyle','voice','story','message'].forEach((name) => {
         const field = form?.elements?.[name];
         if (field && saved[name] != null) field.value = saved[name];
       });
     }
+
+    const dateInput = card.querySelector('[name="celebrationDate"]');
+    if (dateInput) dateInput.min = new Date().toISOString().slice(0, 10);
+    const applySla = (config) => {
+      if (!config?.deliverySla) return;
+      const note = card.querySelector('.checkout-intro p');
+      if (note && !note.textContent.includes(config.deliverySla)) note.textContent += ` Prazo informado: ${config.deliverySla}.`;
+    };
+    applySla(window.CancaoPublicConfig?.get?.());
+    window.CancaoPublicConfig?.ready?.then(applySla);
 
     card.querySelector('[data-ip-close]')?.addEventListener('click', closeModal);
     card.querySelector('#ip-details-form')?.addEventListener('submit', startInfinitePayCheckout);
@@ -188,12 +210,35 @@
       <div class="order-summary-mini"><div><strong>Pedido ${payment.orderNsu}</strong><br><span>${order.recipientName} • ${order.musicStyle}</span></div><strong>${PRICE_LABEL}</strong></div>
       ${payment.receiptUrl ? `<a class="button button-outline" href="${payment.receiptUrl}" target="_blank" rel="noopener">Ver comprovante da InfinitePay</a>` : ''}
       <button class="button button-primary form-submit" type="button" id="ip-send-order">Enviar dados da música</button>
+      <div class="checkout-error" id="ip-whatsapp-error" role="alert"></div>
       <p class="form-help">Este botão só aparece depois da confirmação real do PIX pela InfinitePay.</p>
     `;
     card.querySelector('[data-ip-close]')?.addEventListener('click', closeModal);
-    card.querySelector('#ip-send-order')?.addEventListener('click', () => {
-      window.open(makeWhatsAppUrl(buildOrderMessage(order, payment)), '_blank', 'noopener,noreferrer');
+    card.querySelector('#ip-send-order')?.addEventListener('click', async () => {
+      const button = card.querySelector('#ip-send-order');
+      const errorBox = card.querySelector('#ip-whatsapp-error');
+      button.disabled = true;
+      await (window.CancaoPublicConfig?.ready || Promise.resolve());
+      const url = makeWhatsAppUrl(buildOrderMessage(order, payment));
+      if (!url) {
+        button.disabled = false;
+        if (errorBox) {
+          errorBox.textContent = 'O atendimento ainda não está configurado. Feche esta janela e fale com o suporte do site.';
+          errorBox.classList.add('is-visible');
+        }
+        return;
+      }
+      track('Lead', { content_name: 'Pedido pago enviado ao WhatsApp', value: PRICE_VALUE, currency: 'BRL' });
+      window.open(url, '_blank', 'noopener,noreferrer');
+      button.disabled = false;
     });
+    const purchaseKey = `${payment.orderNsu || ''}:${payment.transactionNsu || ''}`;
+    let alreadyTracked = false;
+    try { alreadyTracked = sessionStorage.getItem('cancao_purchase_tracked_v1') === purchaseKey; } catch {}
+    if (!alreadyTracked) {
+      track('Purchase', { content_name: 'Canção de Nós', value: PRICE_VALUE, currency: 'BRL' });
+      try { sessionStorage.setItem('cancao_purchase_tracked_v1', purchaseKey); } catch {}
+    }
   }
 
   function openCheckoutWindow() {
@@ -252,6 +297,7 @@
     order.savedAt = Date.now();
     saveOrder(order);
     clearVerifiedPayment();
+    track('InitiateCheckout', { content_name: 'Canção de Nós', value: PRICE_VALUE, currency: 'BRL' });
 
     checkoutWindow = openCheckoutWindow();
 
@@ -262,6 +308,9 @@
         body: JSON.stringify({ customerName: order.customerName, customerPhone: order.customerPhone }),
       });
       const result = await response.json().catch(() => ({}));
+      if ([404, 405, 501].includes(response.status)) {
+        throw new Error('A prévia local não executa a API do checkout. Publique as funções do site e configure o INFINITEPAY_HANDLE para testar o PIX.');
+      }
       if (!response.ok || !result.success || !result.checkoutUrl) throw new Error(result.message || 'Não foi possível iniciar o pagamento pela InfinitePay.');
 
       order.orderNsu = result.orderNsu;

@@ -210,8 +210,17 @@ h1 em::after {
   border-radius: inherit;
 }
 
-.hero-visual > img {
+.hero-visual > img,
+.hero-visual > video {
   transition: transform 1.1s var(--ease-out), filter .6s ease;
+}
+
+.hero-visual > video,
+.birthday-photo > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -220,7 +229,8 @@ h1 em::after {
     box-shadow: 0 34px 95px rgba(52, 13, 34, .3);
   }
 
-  .hero-visual:hover > img {
+  .hero-visual:hover > img,
+  .hero-visual:hover > video {
     transform: scale(1.035);
   }
 }
@@ -460,12 +470,14 @@ h1 em::after {
   }
 }
 
-.birthday-photo img {
+.birthday-photo img,
+.birthday-photo video {
   transition: transform 1s var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .birthday-photo:hover img {
+  .birthday-photo:hover img,
+  .birthday-photo:hover video {
     transform: scale(1.035);
   }
 }
@@ -954,7 +966,8 @@ h1 em::after {
   }
 
   .hero-visual,
-  .hero-visual > img {
+  .hero-visual > img,
+  .hero-visual > video {
     min-height: 470px;
     height: 470px;
   }

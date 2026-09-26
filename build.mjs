@@ -2,7 +2,7 @@ import { cp, mkdir, rm, readFile, writeFile, readdir } from 'node:fs/promises';
 import { extname } from 'node:path';
 
 const canonical = 'https://cancao.dflabs.app/';
-const allowedExtensions = new Set(['.html', '.css', '.js', '.svg', '.txt', '.xml']);
+const allowedExtensions = new Set(['.html', '.css', '.js', '.svg', '.txt', '.xml', '.mp3', '.mp4', '.webm']);
 const siteLinks = `<nav class="seo-site-links" aria-label="Conteúdos e páginas úteis">
   <a href="/guias">Guias</a>
   <a href="/musica-personalizada-para-casal">Música para casal</a>
@@ -10,12 +10,17 @@ const siteLinks = `<nav class="seo-site-links" aria-label="Conteúdos e páginas
   <a href="/musica-personalizada-para-namorada">Para namorada</a>
   <a href="/ideias-de-presente-romantico">Presentes românticos</a>
   <a href="/homenagem-de-aniversario">Homenagem de aniversário</a>
+  <a href="/privacidade">Privacidade</a>
+  <a href="/termos">Termos e reembolso</a>
 </nav>`;
 
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 
 let html = await readFile('index.html', 'utf8');
+// Os arquivos podem estar em CRLF no checkout do Windows; normalize antes
+// das substituições para que a versão publicada seja determinística.
+html = html.replace(/\r\n/g, '\n');
 
 html = html
   .replace(/<title>.*?<\/title>/s, '<title>Música Personalizada por R$ 49,90 | Canção de Nós</title>')
@@ -96,7 +101,7 @@ html = html.replace(/    <section class="section section-soft" id="como-funciona
 
 const offerSection = `    <section class="section plans-section" id="planos">
       <div class="section-heading"><span class="eyebrow">UMA ÚNICA OFERTA. SEM COMPLICAÇÃO.</span><h2>Sua música personalizada por R$ 49,90</h2><p>Pagamento somente via PIX pela InfinitePay. Após a confirmação, você envia a história completa.</p></div>
-      <div class="single-offer"><article class="price-card featured"><span class="popular-badge">VALOR ÚNICO</span><div><span class="plan-tag">MÚSICA PERSONALIZADA COMPLETA</span><h3>Canção de Nós</h3><p class="plan-description">Sua história organizada primeiro em uma letra para você revisar e aprovar antes da geração da música.</p></div><div class="price"><small>R$</small>49<sup>,90</sup></div><span class="payment-pill">✓ PIX pela InfinitePay</span><ul><li>Letra criada a partir da sua história</li><li>Nome, apelidos e momentos marcantes</li><li>Escolha do estilo musical</li><li>Preferência de voz</li><li>Até 3 edições da letra</li><li>Música gerada somente após sua aprovação</li><li>Entrega digital da música final</li></ul><button class="button button-primary plan-button" type="button">Começar meu pedido — R$ 49,90</button></article></div>
+      <div class="single-offer"><article class="price-card featured"><span class="popular-badge">VALOR ÚNICO</span><div><span class="plan-tag">MÚSICA PERSONALIZADA COMPLETA</span><h3>Canção de Nós</h3><p class="plan-description">Sua história organizada primeiro em uma letra para você revisar e aprovar antes da geração da música.</p></div><div class="price"><small>R$</small>49<sup>,90</sup></div><span class="payment-pill">✓ PIX pela InfinitePay</span><ul><li>Letra criada a partir da sua história</li><li>Nome, apelidos e momentos marcantes</li><li>Escolha do estilo musical</li><li>Preferência de voz</li><li>Até 3 edições da letra</li><li>Música gerada somente após sua aprovação</li><li>Entrega digital da música final</li></ul><button class="button button-primary plan-button" type="button">Presenteie por R$ 49,90</button></article></div>
       <p class="payment-note"><strong>Importante:</strong> as 3 edições são da letra escrita. Depois que você aprovar a letra e autorizar a geração da música, a produção do áudio é iniciada.</p>
     </section>`;
 html = html.replace(/    <section class="section plans-section" id="planos">[\s\S]*?    <\/section>/, offerSection);

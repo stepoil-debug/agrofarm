@@ -1,5 +1,5 @@
 (() => {
-  const AUDIO_SRC = '/se-as-palavras-forem-poucas.mp3';
+  const AUDIO_SRC = '/cancao-de-nos-theme.mp3';
   const STATE_KEY = 'cancao_audio_state_v2';
   const TARGET_VOLUME = 0.22;
 
@@ -101,7 +101,9 @@
   audio.id = 'ambient-audio';
   audio.src = AUDIO_SRC;
   audio.loop = true;
-  audio.preload = 'auto';
+  audio.autoplay = true;
+  audio.muted = true;
+  audio.preload = 'metadata';
   audio.playsInline = true;
   audio.setAttribute('playsinline', '');
   audio.setAttribute('webkit-playsinline', '');
@@ -113,17 +115,16 @@
   control.type = 'button';
   control.className = 'site-audio-control';
   control.setAttribute('aria-label', 'Pausar ou tocar música ambiente');
-  control.innerHTML = '<span class="site-audio-control__icon">♪</span><span class="site-audio-control__label">Música</span>';
+  control.innerHTML = '<span class="site-audio-control__icon">♪</span><span class="site-audio-control__label">Ativar música</span>';
   document.body.appendChild(control);
 
   let userDisabled = readState().enabled === false;
-  let fallbackMuted = false;
 
   const syncControl = () => {
     const playing = !audio.paused && !audio.muted;
     control.classList.toggle('is-playing', playing);
     control.querySelector('.site-audio-control__icon').textContent = playing ? '♫' : '♪';
-    control.querySelector('.site-audio-control__label').textContent = playing ? 'Pausar música' : 'Tocar música';
+    control.querySelector('.site-audio-control__label').textContent = playing ? 'Pausar música' : 'Ativar música';
   };
 
   audio.addEventListener('loadedmetadata', () => {
@@ -132,57 +133,6 @@
       try { audio.currentTime = state.time; } catch {}
     }
   }, { once: true });
-
-  const tryAudibleAutoplay = async () => {
-    if (userDisabled) return false;
-    audio.muted = false;
-    audio.volume = TARGET_VOLUME;
-    try {
-      await audio.play();
-      fallbackMuted = false;
-      syncControl();
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const startMutedFallback = async () => {
-    if (userDisabled) return;
-    try {
-      audio.muted = true;
-      await audio.play();
-      fallbackMuted = true;
-    } catch {}
-    syncControl();
-  };
-
-  const unlockAudio = async () => {
-    if (userDisabled) return;
-    if (fallbackMuted || audio.paused || audio.muted) {
-      audio.muted = false;
-      audio.volume = TARGET_VOLUME;
-      try { await audio.play(); } catch {}
-      fallbackMuted = false;
-      syncControl();
-    }
-  };
-
-  // Tenta áudio audível imediatamente. Se a política do navegador impedir,
-  // mantém a faixa iniciada em modo permitido e libera o som na primeira interação.
-  requestAnimationFrame(async () => {
-    const started = await tryAudibleAutoplay();
-    if (!started) await startMutedFallback();
-  });
-
-  ['pointerdown','touchstart','keydown'].forEach(eventName => {
-    window.addEventListener(eventName, unlockAudio, { once: true, passive: eventName !== 'keydown' });
-  });
-
-  window.addEventListener('focus', () => { if (!userDisabled) tryAudibleAutoplay(); });
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && !userDisabled) tryAudibleAutoplay();
-  });
 
   control.addEventListener('click', async (event) => {
     event.stopPropagation();
@@ -199,6 +149,22 @@
     }
     syncControl();
   });
+
+  // Navegadores bloqueiam autoplay audível. A faixa começa silenciosa e é
+  // liberada no primeiro gesto do visitante, mantendo a intenção de tocar
+  // automaticamente sem forçar som antes de existir interação.
+  const enableAfterGesture = async (event) => {
+    if (event.target.closest?.('.site-audio-control')) return;
+    if (userDisabled || !audio.muted) return;
+    audio.muted = false;
+    audio.volume = TARGET_VOLUME;
+    try { await audio.play(); } catch {}
+    writeState(audio, true);
+    syncControl();
+  };
+  document.addEventListener('pointerdown', enableAfterGesture, { once: true, passive: true });
+  document.addEventListener('keydown', enableAfterGesture, { once: true });
+  audio.play().catch(() => {});
 
   audio.addEventListener('play', syncControl);
   audio.addEventListener('pause', syncControl);

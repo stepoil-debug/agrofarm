@@ -237,7 +237,8 @@ h1 em {
   transform: rotate(1.5deg);
 }
 
-.hero-visual > img {
+.hero-visual > img,
+.hero-visual > video {
   width: 100%;
   height: 620px;
   object-fit: cover;
@@ -533,7 +534,8 @@ h1 em {
   background: linear-gradient(180deg, transparent 56%, rgba(63, 16, 40, 0.18));
 }
 
-.birthday-photo img {
+.birthday-photo img,
+.birthday-photo video {
   width: 100%;
   min-height: 590px;
   object-fit: cover;
@@ -1048,7 +1050,8 @@ textarea:focus {
   }
 
   .hero-visual,
-  .hero-visual > img {
+  .hero-visual > img,
+  .hero-visual > video {
     min-height: 500px;
     height: 500px;
   }
@@ -1083,7 +1086,8 @@ textarea:focus {
     padding: 25px;
   }
 
-  .birthday-photo img {
+  .birthday-photo img,
+  .birthday-photo video {
     min-height: 430px;
   }
 
@@ -1126,7 +1130,8 @@ textarea:focus {
   }
 
   .hero-visual,
-  .hero-visual > img {
+  .hero-visual > img,
+  .hero-visual > video {
     min-height: 450px;
     height: 450px;
   }

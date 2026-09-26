@@ -4,10 +4,7 @@
 .header-cta{white-space:nowrap;max-width:min(220px,42vw);overflow:hidden;text-overflow:ellipsis}.floating-whatsapp{box-sizing:border-box;max-width:calc(100vw - 24px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.floating-whatsapp span{min-width:0;overflow:hidden;text-overflow:ellipsis}.form-submit,.payment-return-actions .button{max-width:100%}
 
 /* Copy emocional: Presenteie */
-.header-cta,.plan-button,.final-cta .button-light,.floating-whatsapp span{font-size:0!important}
-.header-cta::after{content:"Presenteie";font-size:.84rem}
-.plan-button::after{content:"Presenteie por R$ 49,90";font-size:.94rem}
-.final-cta .button-light::after{content:"Presenteie quem você ama";font-size:.94rem}
+.floating-whatsapp span{font-size:0!important}
 .floating-whatsapp span::after{content:"Presenteie • R$ 49,90";font-size:.82rem}
 
 @media(max-width:720px){
@@ -25,3 +22,58 @@
 }
 
 @media(max-width:390px){.header-cta{max-width:102px;padding-inline:11px!important}.header-cta::after{font-size:.74rem!important}.floating-whatsapp{left:10px!important;right:10px!important;padding:10px 12px!important}.floating-whatsapp span::after{font-size:.73rem!important}.modal-card.payment-modal{padding-inline:14px!important}.checkout-badge{font-size:.7rem}.pix-payment-card h3{font-size:1.45rem}}
+
+/* Mobile-first visual pass: prevent overflow and reserve comfortable touch targets. */
+@media(max-width:720px){
+  html,body{max-width:100%;overflow-x:hidden}
+  body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+  .announcement{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;text-align:center;font-size:.68rem!important;line-height:1.35;padding:8px 12px!important}
+  .header{min-height:58px;padding:10px 12px!important;gap:8px!important}
+  .brand{min-width:0;gap:7px;font-size:.94rem!important}
+  .brand-mark{width:30px!important;height:30px!important;flex:0 0 30px}
+  .brand>span:last-child{min-width:0;max-width:45vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .header-cta{min-width:0!important;max-width:112px!important;padding:9px 11px!important;font-size:.72rem!important;line-height:1.05}
+  .hero{padding:36px 14px 48px!important;gap:26px!important}
+  .hero-copy .eyebrow{max-width:100%;font-size:.58rem!important;letter-spacing:.12em;line-height:1.3}
+  .hero h1{font-size:clamp(2.35rem,11.8vw,3.65rem)!important;line-height:.99!important;letter-spacing:-.055em!important;overflow-wrap:anywhere}
+  .hero-lead{font-size:.98rem!important;line-height:1.55!important}
+  .hero-support{font-size:.86rem!important;line-height:1.55!important}
+  .hero-actions{gap:9px!important}
+  .hero-actions .button{min-height:52px!important;padding:13px 16px!important;font-size:.86rem!important}
+  .trust-row{grid-template-columns:1fr!important;margin-top:16px!important;gap:6px!important}
+  .trust-row span,.trust-row span:last-child{grid-column:auto!important;min-height:36px;padding:7px 9px!important;font-size:.7rem!important}
+  .hero-visual,.hero-visual>img,.hero-visual>video{width:100%;min-height:clamp(350px,103vw,440px)!important;height:clamp(350px,103vw,440px)!important;border-radius:24px!important}
+  .hero-visual>video{object-position:center;display:block}
+  .reaction-card{right:12px!important;bottom:12px!important;left:12px!important;padding:15px!important;border-radius:17px!important}
+  .reaction-card strong{font-size:1rem!important;line-height:1.2!important}
+  .reaction-card p{display:none!important}
+  .music-pill{top:12px!important;left:12px!important;max-width:calc(100% - 24px);font-size:.64rem!important}
+  .section{padding:58px 14px!important}
+  .section-heading{margin-bottom:26px!important}
+  .section-heading h2,.comparison-copy h2,.birthday-copy h2,.final-cta h2{font-size:clamp(1.9rem,8.7vw,2.75rem)!important;line-height:1.04!important;overflow-wrap:anywhere}
+  .emotion-card,.step-card,.comparison-box,.price-card{padding:20px!important;border-radius:19px!important}
+  .birthday-scene{gap:28px!important;padding-top:58px!important;padding-bottom:58px!important}
+  .birthday-photo,.birthday-photo>img,.birthday-photo>video{width:100%;min-height:clamp(310px,88vw,390px)!important;height:clamp(310px,88vw,390px)!important;border-radius:22px!important}
+  .birthday-photo>video{display:block;object-fit:cover}
+  .birthday-copy .button{width:100%;min-height:52px}
+  .single-offer .price-card ul{columns:1!important}
+  .price-card{padding:23px 18px!important}
+  .price{font-size:3.15rem!important}
+  .modal{padding:0!important}
+  .modal-card,.modal-card.payment-modal{width:100%!important;max-width:none!important;max-height:calc(100dvh - 8px)!important;margin:0!important;padding:30px 14px calc(18px + env(safe-area-inset-bottom))!important;border-radius:24px 24px 0 0!important}
+  .modal-card h2{font-size:clamp(1.85rem,9vw,2.6rem)!important;line-height:1.04!important}
+  .checkout-form-grid{grid-template-columns:1fr!important;gap:10px!important}
+  input,select,textarea{font-size:16px!important}
+  .form-submit,.payment-return-actions .button{width:100%!important;min-height:52px!important}
+  .floating-whatsapp{right:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;left:10px!important;min-height:52px!important;padding:0 13px!important;font-size:.76rem!important}
+}
+
+@media(max-width:390px){
+  .brand>span:last-child{max-width:38vw}
+  .header-cta{max-width:100px!important;padding-inline:9px!important;font-size:.68rem!important}
+  .hero{padding-inline:12px!important}
+  .hero h1{font-size:clamp(2.2rem,11.5vw,3rem)!important}
+  .hero-visual,.hero-visual>img,.hero-visual>video{min-height:330px!important;height:330px!important}
+  .section{padding-inline:12px!important}
+  .floating-whatsapp{right:8px!important;left:8px!important}
+}

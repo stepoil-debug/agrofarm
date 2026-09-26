@@ -339,7 +339,7 @@ body{
   .hero-copy::before{inset:-28px -24px -30px -24px}
   .hero::before{inset:16% -18% -2% 26%!important;opacity:.18}
   .hero-visual{width:min(820px,100%);margin:0 auto;transform:none}
-  .hero-visual>img{min-height:520px}
+  .hero-visual>img,.hero-visual>video{min-height:520px}
 }
 
 @media(max-width:720px){
@@ -359,7 +359,7 @@ body{
   .trust-row{gap:6px!important}
   .trust-row span{font-size:.75rem;padding:7px 9px}
   .hero-visual{border-radius:26px!important;box-shadow:0 28px 70px rgba(51,13,31,.22)!important}
-  .hero-visual>img{min-height:430px;border-radius:26px!important}
+  .hero-visual>img,.hero-visual>video{min-height:430px;border-radius:26px!important}
   .hero-overlay{border-radius:26px!important}
   .reaction-card{left:14px!important;right:14px!important;bottom:14px!important;border-radius:20px!important}
   .audio-preview{top:14px!important;right:14px!important;width:min(220px,calc(100% - 28px))!important}
@@ -367,6 +367,6 @@ body{
 }
 
 @media(prefers-reduced-motion:reduce){
-  .hero::before,.hero::after,.hero-visual>img,.announcement::after{animation:none!important}
+  .hero::before,.hero::after,.hero-visual>img,.hero-visual>video,.announcement::after{animation:none!important}
   [data-reveal]{transition-duration:.01ms!important}
 }
