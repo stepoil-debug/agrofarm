@@ -94,7 +94,7 @@
   const headerCta = document.querySelector('.header-cta');
   if (headerCta) headerCta.textContent = 'Presenteie';
   document.querySelectorAll('.hero-actions .button-primary').forEach(el => { el.textContent = 'Presenteie com uma música'; });
-  document.querySelectorAll('.plan-button').forEach(el => { el.textContent = 'Presenteie por R$ 49,90'; });
+  document.querySelectorAll('.plan-button').forEach(el => { el.textContent = 'Escolher pagamento'; });
   document.querySelectorAll('.final-cta .button-light').forEach(el => { el.textContent = 'Presenteie quem você ama'; });
 
   const audio = document.createElement('audio');
