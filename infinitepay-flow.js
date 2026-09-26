@@ -431,18 +431,20 @@
   });
 
   function overrideStartButtons() {
-    document.querySelectorAll('.plan-button,[data-start-order],.floating-whatsapp,.header-cta').forEach((button) => {
-      const clone = button.cloneNode(true);
-      button.replaceWith(clone);
-      clone.addEventListener('click', (event) => {
-        event.preventDefault();
-        const order = getOrder();
-        const verified = getVerifiedPayment();
-        if (order && verified?.verified && (!order.orderNsu || verified.orderNsu === order.orderNsu)) renderPaid(order, verified);
-        else renderForm();
-        openModal();
-      });
-    });
+    if (document.body.dataset.cancaoPaymentBound === 'true') return;
+    document.body.dataset.cancaoPaymentBound = 'true';
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof Element
+        ? event.target.closest('.plan-button,[data-start-order],.floating-whatsapp,.header-cta')
+        : null;
+      if (!target) return;
+      event.preventDefault();
+      const order = getOrder();
+      const verified = getVerifiedPayment();
+      if (order && verified?.verified && (!order.orderNsu || verified.orderNsu === order.orderNsu)) renderPaid(order, verified);
+      else renderForm();
+      openModal();
+    }, true);
   }
 
   modal.querySelector('.modal-backdrop')?.addEventListener('click', closeModal);
