@@ -154,7 +154,7 @@
       </form>
     `;
 
-    const saved = { ...getQueryOrder(), ...(getOrder() || {}) };
+    const saved = { ...(getOrder() || {}), ...getQueryOrder() };
     if (saved) {
       const form = card.querySelector('#ip-details-form');
       ['customerName','customerPhone','recipientName','occasion','celebrationDate','nickname','musicStyle','voice','story','message'].forEach((name) => {
@@ -185,6 +185,13 @@
       const plan = PAYMENT_PLANS[planInputs.find((input) => input.checked)?.value] || DEFAULT_PLAN;
       if (payButton) payButton.textContent = `Pagar com ${plan.key === 'card' ? 'cartão' : 'PIX'} — ${plan.label}`;
     };
+    const paymentOptions = [...card.querySelectorAll('.payment-choice-option')];
+    paymentOptions.forEach((option) => option.addEventListener('click', () => {
+      const input = option.querySelector('input[name="paymentPlan"]');
+      if (!input) return;
+      input.checked = true;
+      updatePlanLabel();
+    }));
     planInputs.forEach((input) => {
       input.addEventListener('change', updatePlanLabel);
       input.addEventListener('input', updatePlanLabel);
