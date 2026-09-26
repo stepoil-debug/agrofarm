@@ -5,7 +5,7 @@
 1. Cliente inicia o pedido informando apenas nome e WhatsApp.
 2. O backend cria um checkout InfinitePay conforme a opção escolhida:
    - PIX: R$ 49,90 (4990 centavos)
-   - Cartão: R$ 49,90 de valor-base (4990 centavos); os juros do parcelamento são calculados e repassados ao cliente pela InfinitePay
+   - Cartão: R$ 49,90 de valor-base (4990 centavos); na simulação atual, o cliente visualiza até 12x de R$ 4,99 com os juros do parcelamento
 3. O cliente paga via PIX ou cartão de crédito.
 4. A InfinitePay redireciona para `https://cancao.dflabs.app/?pagamento=retorno`.
 5. O backend chama `payment_check` e só libera o formulário completo quando confirma:
@@ -36,7 +36,7 @@ Vendas > Checkout > Configurações > Meios de Pagamentos
 
 - PIX: ativado
 - Cartão de crédito: ativado
-- O checkout envia R$ 49,90 como valor-base. A InfinitePay calcula os juros conforme o número de parcelas escolhido pelo cliente.
+- O checkout envia R$ 49,90 como valor-base. Na simulação atual, a InfinitePay exibiu 12x de R$ 4,99; as demais parcelas podem variar conforme as taxas vigentes da conta.
 
 O backend também rejeita qualquer retorno cujo método ou valor não correspondam ao plano escolhido.
 

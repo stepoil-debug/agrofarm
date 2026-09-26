@@ -24,7 +24,7 @@ html = html.replace(/\r\n/g, '\n');
 
 html = html
   .replace(/<title>.*?<\/title>/s, '<title>Música Personalizada por R$ 49,90 | Canção de Nós</title>')
-  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Crie uma música personalizada a partir de R$ 49,90 no PIX ou parcele em até 12x de R$ 7,90 no cartão. Aprove a letra antes da música." />')
+  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Crie uma música personalizada por R$ 49,90 no PIX ou em até 12x de R$ 4,99 no cartão. Os juros do parcelamento ficam por conta do cliente." />')
   .replace('<meta name="theme-color" content="#681c43" />', '<meta name="theme-color" content="#681c43" />\n  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />\n  <meta name="author" content="Canção de Nós" />\n  <link rel="canonical" href="https://cancao.dflabs.app/" />')
   .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="Música Personalizada por R$ 49,90 | Canção de Nós" />')
   .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Sua história vira letra. Você pode pedir até 3 edições e só após aprovar geramos a música." />')
@@ -42,13 +42,13 @@ html = html
 // Alinha toda a comunicação pública ao valor-base de R$ 49,90 no cartão;
 // os juros do parcelamento são calculados pela InfinitePay para o cliente.
 html = html
-  .replaceAll('Crie uma música personalizada a partir de R$ 49,90 no PIX ou parcele em até 12x de R$ 7,90 no cartão. Aprove a letra antes da música.', 'Crie uma música personalizada por R$ 49,90 no PIX ou no cartão, com juros do parcelamento definidos pela InfinitePay. Aprove a letra antes da música.')
-  .replaceAll('R$ 49,90 no PIX • ou 12x de R$ 7,90 no cartão.', 'R$ 49,90 no PIX ou no cartão • juros do parcelamento por conta do cliente.')
-  .replaceAll('Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito em até 12x de R$ 7,90. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.', 'Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito. No parcelamento, os juros são calculados pela InfinitePay e ficam por conta do cliente. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.')
-  .replaceAll('Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.', 'Use PIX ou cartão a partir de R$ 49,90. No cartão parcelado, a InfinitePay calcula os juros para o cliente e confirma o pagamento automaticamente.')
-  .replaceAll('PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.', 'PIX ou cartão a partir de R$ 49,90. No parcelamento do cartão, os juros são calculados pela InfinitePay e ficam por conta do cliente. Após a confirmação, você envia a história completa.')
+  .replaceAll('Crie uma música personalizada a partir de R$ 49,90 no PIX ou parcele em até 12x de R$ 7,90 no cartão. Aprove a letra antes da música.', 'Crie uma música personalizada por R$ 49,90 no PIX ou em até 12x de R$ 4,99 no cartão. Os juros do parcelamento ficam por conta do cliente.')
+  .replaceAll('R$ 49,90 no PIX • ou 12x de R$ 7,90 no cartão.', 'R$ 49,90 no PIX • ou até 12x de R$ 4,99 no cartão.')
+  .replaceAll('Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito em até 12x de R$ 7,90. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.', 'Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito em até 12x de R$ 4,99. Os juros são calculados pela InfinitePay e ficam por conta do cliente. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.')
+  .replaceAll('Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.', 'Use PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente e a InfinitePay confirma o pagamento automaticamente.')
+  .replaceAll('PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.', 'PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente. Após a confirmação, você envia a história completa.')
   .replaceAll('<h2>Sua música personalizada a partir de R$ 49,90</h2>', '<h2>Sua música personalizada por R$ 49,90</h2>')
-  .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>R$ 49,90</strong><span>no cartão + juros</span>');
+  .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>12x R$ 4,99</strong><span>no cartão + juros</span>');
 
 const faqItems = [
   ['Como funciona o pagamento?', 'Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito. No parcelamento, os juros são calculados pela InfinitePay e ficam por conta do cliente. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.'],
@@ -120,10 +120,10 @@ html = html.replace(/    <section class="section plans-section" id="planos">[\s\
 // O bloco de oferta acima é inserido depois das substituições iniciais; por isso
 // normalizamos também o conteúdo final antes de gravar a página publicada.
 html = html
-  .replaceAll('Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.', 'Use PIX ou cartão a partir de R$ 49,90. No cartão parcelado, a InfinitePay calcula os juros para o cliente e confirma o pagamento automaticamente.')
-  .replaceAll('PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.', 'PIX ou cartão a partir de R$ 49,90. No parcelamento do cartão, os juros são calculados pela InfinitePay e ficam por conta do cliente. Após a confirmação, você envia a história completa.')
+  .replaceAll('Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.', 'Use PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente e a InfinitePay confirma o pagamento automaticamente.')
+  .replaceAll('PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.', 'PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente. Após a confirmação, você envia a história completa.')
   .replaceAll('<h2>Sua música personalizada a partir de R$ 49,90</h2>', '<h2>Sua música personalizada por R$ 49,90</h2>')
-  .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>R$ 49,90</strong><span>no cartão + juros</span>');
+  .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>12x R$ 4,99</strong><span>no cartão + juros</span>');
 
 const faqHtml = `    <section class="section faq-section" id="duvidas"><div class="section-heading left"><span class="eyebrow">DÚVIDAS FREQUENTES</span><h2>Pagamento, revisões e produção</h2></div><div class="faq-list">${faqItems.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('')}</div></section>`;
 html = html.replace(/    <section class="section faq-section" id="duvidas">[\s\S]*?    <\/section>/, faqHtml);
