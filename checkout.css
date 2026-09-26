@@ -18,3 +18,11 @@
 
 .payment-choice{display:grid;gap:10px;margin:22px 0;padding:0;border:0;min-inline-size:0}.payment-choice legend{padding:0;margin:0 0 2px;color:var(--wine);font-size:.95rem;font-weight:800}.payment-choice-option{display:flex!important;align-items:center;gap:12px;margin:0!important;padding:14px 16px;border:1px solid rgba(104,28,67,.14);border-radius:16px;cursor:pointer;background:#fffafc;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease}.payment-choice-option:hover{border-color:rgba(104,28,67,.35);background:#fff6f9}.payment-choice-option:has(input:checked){border-color:var(--rose);background:#fff1f6;box-shadow:0 0 0 3px rgba(200,100,134,.12)}.payment-choice-option input[type=radio]{flex:0 0 20px;width:20px!important;height:20px!important;margin:0!important;padding:0!important;accent-color:var(--wine)}.payment-choice-option span{display:grid;gap:2px;min-width:0}.payment-choice-option strong{color:var(--wine-dark);font-size:.96rem}.payment-choice-option small{color:var(--muted);font-size:.82rem;line-height:1.4}
 .offer-payment-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.offer-payment-options>div{display:grid;gap:3px;padding:13px;border:1px solid rgba(104,28,67,.12);border-radius:14px;background:#fff}.offer-payment-options strong{color:var(--wine);font-size:1.2rem}.offer-payment-options span{color:var(--muted);font-size:.82rem}@media(max-width:420px){.offer-payment-options{grid-template-columns:1fr}}
+
+/* Evita que a âncora #planos fique sob o cabeçalho fixo e mantém o selo inteiro visível. */
+.plans-section{scroll-margin-top:96px}
+.single-offer .price-card{overflow:visible}
+@media(max-width:720px){
+  .plans-section{scroll-margin-top:112px}
+  .single-offer{padding-top:18px}
+}
