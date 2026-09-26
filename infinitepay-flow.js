@@ -36,6 +36,11 @@
 
   const saveOrder = (order) => safeSet(STORAGE_KEY, order);
   const getOrder = () => safeGet(STORAGE_KEY);
+  const getQueryOrder = () => {
+    const params = new URLSearchParams(window.location.search);
+    const fields = ['customerName', 'customerPhone', 'recipientName', 'occasion', 'celebrationDate', 'nickname', 'musicStyle', 'voice', 'paymentPlan', 'story', 'message'];
+    return Object.fromEntries(fields.filter((field) => params.has(field)).map((field) => [field, params.get(field)]));
+  };
   const saveVerifiedPayment = (payment) => safeSet(PAYMENT_KEY, payment);
   const getVerifiedPayment = () => safeGet(PAYMENT_KEY);
   const getPlan = (order = {}) => PAYMENT_PLANS[order.paymentPlan] || DEFAULT_PLAN;
@@ -149,7 +154,7 @@
       </form>
     `;
 
-    const saved = getOrder();
+    const saved = { ...getQueryOrder(), ...(getOrder() || {}) };
     if (saved) {
       const form = card.querySelector('#ip-details-form');
       ['customerName','customerPhone','recipientName','occasion','celebrationDate','nickname','musicStyle','voice','story','message'].forEach((name) => {
@@ -158,8 +163,8 @@
       });
       const savedPlan = form?.elements?.paymentPlan;
       if (savedPlan && saved.paymentPlan) {
-        savedPlan.value = saved.paymentPlan;
-        savedPlan.dispatchEvent(new Event('change', { bubbles: true }));
+        const selectedInput = [...savedPlan].find((input) => input.value === saved.paymentPlan);
+        if (selectedInput) selectedInput.checked = true;
       }
     }
 
@@ -180,7 +185,11 @@
       const plan = PAYMENT_PLANS[planInputs.find((input) => input.checked)?.value] || DEFAULT_PLAN;
       if (payButton) payButton.textContent = `Pagar com ${plan.key === 'card' ? 'cartão' : 'PIX'} — ${plan.label}`;
     };
-    planInputs.forEach((input) => input.addEventListener('change', updatePlanLabel));
+    planInputs.forEach((input) => {
+      input.addEventListener('change', updatePlanLabel);
+      input.addEventListener('input', updatePlanLabel);
+      input.addEventListener('click', updatePlanLabel);
+    });
     updatePlanLabel();
     card.querySelector('#ip-details-form')?.addEventListener('submit', startInfinitePayCheckout);
   }
