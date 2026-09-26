@@ -18,7 +18,7 @@ for (const entry of entries) {
   const scripts = [
     ['public-config.js', '  <script src="./public-config.js" defer></script>'],
     ['analytics.js', '  <script src="./analytics.js" defer></script>'],
-    ['audio.js', '  <script src="./audio.js" defer></script>'],
+    ['audio.js', '  <script src="./audio.js?v=20260926-3" defer></script>'],
   ];
   for (const [needle, tag] of scripts) {
     if (!html.includes(needle)) html = html.replace('</body>', `${tag}\n</body>`);
