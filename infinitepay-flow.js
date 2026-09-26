@@ -3,7 +3,7 @@
   const PAYMENT_KEY = 'cancao_verified_payment_v2';
   const PAYMENT_PLANS = {
     pix: { key: 'pix', label: 'R$ 49,90', value: 49.90, cents: 4990, title: 'PIX à vista', detail: 'Pagamento imediato, sem juros' },
-    card: { key: 'card', label: '12× R$ 7,90', value: 94.80, cents: 7900, title: 'Cartão de crédito', detail: 'Parcelamento em até 12 vezes' },
+    card: { key: 'card', label: 'R$ 49,90 + juros', value: 49.90, cents: 4990, title: 'Cartão de crédito', detail: 'Parcelamento com juros do cliente' },
   };
   const DEFAULT_PLAN = PAYMENT_PLANS.pix;
   const modal = document.querySelector('#order-modal');

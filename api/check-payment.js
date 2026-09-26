@@ -1,6 +1,6 @@
 const PAYMENT_PLANS = {
   pix: { key: 'pix', priceCents: 4990, captureMethod: 'pix' },
-  card: { key: 'card', priceCents: 7900, captureMethod: 'credit_card' }
+  card: { key: 'card', priceCents: 4990, captureMethod: 'credit_card' }
 };
 function getHandle() {
   return String(process.env.INFINITEPAY_HANDLE || '').replace(/^\$/, '').trim();

@@ -7,7 +7,7 @@ Página de vendas para músicas personalizadas a partir da história de casais.
 - **Canção Express — R$ 49,90**
 - **Canção Especial — R$ 119,90**
 - Atendimento pelo WhatsApp após a confirmação do pagamento
-- Pagamento por PIX de R$ 49,90 ou cartão em 12x de R$ 7,90 (total de R$ 94,80) via checkout da InfinitePay
+- Pagamento por PIX ou cartão a partir de R$ 49,90; os juros do parcelamento do cartão ficam por conta do cliente via checkout da InfinitePay
 - Sem login ou banco de dados nesta primeira versão
 
 ## Configuração de produção
