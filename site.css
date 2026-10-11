@@ -435,6 +435,20 @@ p { margin: 0 0 1em; }
 .brief-timeline-item { padding: 12px 14px; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); font-size: .92rem; }
 .brief-timeline-item.is-complete { border-color: rgba(29, 122, 70, .35); background: #f2faf5; }
 .success { color: var(--green); }
+.x1-composing { display: grid; justify-items: center; gap: 18px; padding: 40px 0 24px; text-align: center; }
+.x1-composing p { font: italic 400 1.15rem/1.4 var(--serif); color: var(--wine); margin: 0; min-height: 1.6em; }
+.x1-composing-disc { width: 76px; height: 76px; border-radius: 50%; background: conic-gradient(from 0deg, var(--wine), var(--rose), var(--gold), var(--wine)); position: relative; animation: spin 2.4s linear infinite; box-shadow: var(--shadow); }
+.x1-composing-disc::after { content: ""; position: absolute; inset: 30px; border-radius: 50%; background: var(--ivory); }
+.lyrics-draft-picker.is-selected { border-color: var(--wine) !important; background: var(--rose-soft) !important; box-shadow: 0 0 0 2px rgba(107, 29, 64, .15); }
+.lyrics-draft-picker strong { font-family: var(--serif); font-weight: 500; }
+.x1-lyrics-editor input { font: 500 1.1rem/1.3 var(--serif) !important; color: var(--wine-deep) !important; }
+.modal-card textarea.x1-lyrics { min-height: 340px; font: 400 1.04rem/1.75 var(--serif); color: var(--ink); background: #fffdfb; white-space: pre-wrap; }
+.x1-lyrics[aria-busy="true"] { opacity: .5; }
+.x1-ai-revise { margin: 6px 0 4px; padding: 18px 18px 6px; border-radius: 18px; background: var(--gold-soft); }
+.x1-ai-revise textarea { min-height: 64px !important; }
+.x1-revise-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.x1-revise-actions .button { min-height: 44px; padding: 10px 18px; font-size: .92rem; background: var(--paper); }
+.x1-lyrics-final { margin: 10px 0 0; max-height: 300px; overflow-y: auto; white-space: pre-wrap; font: 400 1rem/1.7 var(--serif); color: var(--ink); }
 
 /* Movimento */
 @media (prefers-reduced-motion: no-preference) {

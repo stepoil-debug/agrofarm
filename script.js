@@ -95,6 +95,6 @@
   // O fluxo comercial é feito no X1: briefing completo, escolha da proposta
   // e envio para o vendedor no WhatsApp. O pagamento é combinado no atendimento.
   const flow = document.createElement('script');
-  flow.src = '/x1-flow.js?v=20261010-1';
+  flow.src = '/x1-flow.js?v=20261011-2';
   document.body.appendChild(flow);
 })();
