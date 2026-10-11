@@ -504,6 +504,10 @@ p { margin: 0 0 1em; }
   .cinema { align-items: end; }
   .cinema-copy { padding: 220px 0 56px; }
   .form-grid { grid-template-columns: 1fr; }
+  .x1-model-grid { display: flex !important; gap: 10px !important; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -18px 14px !important; padding: 2px 18px 8px; scrollbar-width: none; }
+  .x1-model-grid::-webkit-scrollbar { display: none; }
+  .x1-model-grid .lyrics-draft-picker { flex: 0 0 68%; scroll-snap-align: start; min-height: 0 !important; padding: 14px !important; }
+  .modal-card textarea.x1-lyrics { min-height: 300px; font-size: .98rem; }
   .modal { padding: 8px; }
   .modal-card { padding: 26px 18px 22px; border-radius: 22px; max-height: calc(100dvh - 16px); }
   .footer-grid { grid-template-columns: 1fr; }
