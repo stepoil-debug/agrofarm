@@ -3,6 +3,10 @@ import { extname } from 'node:path';
 
 const canonical = 'https://cancao.dflabs.app/';
 const allowedExtensions = new Set(['.html', '.css', '.js', '.svg', '.txt', '.xml', '.mp3', '.mp4', '.webm']);
+const deferGoogleFonts = (page) => page.replace(
+  /<link href="(https:\/\/fonts\.googleapis\.com\/css2[^"]+)" rel="stylesheet"\s*\/>/g,
+  (_match, href) => `<link rel="preload" as="style" href="${href}" onload="this.onload=null;this.rel='stylesheet'" /><noscript><link rel="stylesheet" href="${href}" /></noscript>`
+);
 const siteLinks = `<nav class="seo-site-links" aria-label="Conteúdos e páginas úteis">
   <a href="/guias">Guias</a>
   <a href="/musica-personalizada-para-casal">Música para casal</a>
@@ -24,20 +28,20 @@ html = html.replace(/\r\n/g, '\n');
 
 html = html
   .replace(/<title>.*?<\/title>/s, '<title>Música Personalizada por R$ 49,90 | Canção de Nós</title>')
-  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Crie uma música personalizada por R$ 49,90 no PIX ou em até 12x de R$ 4,99 no cartão. Os juros do parcelamento ficam por conta do cliente." />')
+  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Conte a história de vocês, escolha uma direção musical e receba atendimento personalizado pelo WhatsApp para fechar sua música." />')
   .replace('<meta name="theme-color" content="#681c43" />', '<meta name="theme-color" content="#681c43" />\n  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />\n  <meta name="author" content="Canção de Nós" />\n  <link rel="canonical" href="https://cancao.dflabs.app/" />')
   .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="Música Personalizada por R$ 49,90 | Canção de Nós" />')
-  .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Sua história vira letra. Você pode pedir até 3 edições e só após aprovar geramos a música." />')
-  .replace('<meta property="og:type" content="website" />', '<meta property="og:type" content="website" />\n  <meta property="og:url" content="https://cancao.dflabs.app/" />\n  <meta property="og:site_name" content="Canção de Nós" />\n  <meta property="og:locale" content="pt_BR" />\n  <meta name="twitter:card" content="summary_large_image" />\n  <meta name="twitter:title" content="Música Personalizada por R$ 49,90 | Canção de Nós" />\n  <meta name="twitter:description" content="Pague no PIX, aprove a letra e só depois geramos a música." />\n  <meta name="twitter:image" content="https://images.pexels.com/photos/6800136/pexels-photo-6800136.jpeg?auto=compress&cs=tinysrgb&w=1200" />')
-  .replace('<link rel="stylesheet" href="./enhancements.css" data-premium-layer />', '<link rel="stylesheet" href="./enhancements.css" data-premium-layer />\n  <link rel="stylesheet" href="./seo.css" />\n  <link rel="stylesheet" href="./checkout.css?v=20260926-4" />')
+  .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Preencha o briefing, escolha uma proposta de música e fale com o atendimento pelo WhatsApp." />')
+  .replace('<meta property="og:type" content="website" />', '<meta property="og:type" content="website" />\n  <meta property="og:url" content="https://cancao.dflabs.app/" />\n  <meta property="og:site_name" content="Canção de Nós" />\n  <meta property="og:locale" content="pt_BR" />\n  <meta name="twitter:card" content="summary_large_image" />\n  <meta name="twitter:title" content="Música Personalizada | Canção de Nós" />\n  <meta name="twitter:description" content="Escolha uma direção para a sua música e converse com o atendimento pelo WhatsApp." />\n  <meta name="twitter:image" content="https://images.pexels.com/photos/6800136/pexels-photo-6800136.jpeg?auto=compress&cs=tinysrgb&w=1200" />')
+  .replace('<link rel="stylesheet" href="./enhancements.css" data-premium-layer />', '<link rel="stylesheet" href="./enhancements.css" data-premium-layer />\n  <link rel="stylesheet" href="./seo.css" />\n  <link rel="stylesheet" href="./checkout.css?v=20260926-6" />')
   .replace('<h1>O aniversário de quem você ama merece mais que um presente <em>qualquer.</em></h1>', '<h1>Música personalizada por <em>R$ 49,90</em>: sua história primeiro vira letra, depois vira música.</h1>')
-  .replace('Transforme a história de vocês em uma música personalizada, feita para emocionar e lembrar à pessoa amada o quanto ela é especial na sua vida.', 'Conte a história de vocês, pague com PIX e receba primeiro a letra personalizada. Você pode solicitar até 3 edições antes de aprovar a versão final e autorizar a geração da música.')
-  .replace('Você conta como tudo começou, os momentos marcantes, apelidos e frases de vocês. Nós transformamos essas lembranças em uma homenagem que ninguém mais poderia receber.', 'Assim você não perde tempo: a música só é produzida depois que a letra estiver exatamente como você quer.')
+  .replace('Transforme a história de vocês em uma música personalizada, feita para emocionar e lembrar à pessoa amada o quanto ela é especial na sua vida.', 'Conte a história de vocês, escolha uma direção musical e receba atendimento personalizado pelo WhatsApp para fechar o pedido.')
+  .replace('Você conta como tudo começou, os momentos marcantes, apelidos e frases de vocês. Nós transformamos essas lembranças em uma homenagem que ninguém mais poderia receber.', 'Você só conversa sobre prazo, valor e pagamento depois de escolher a proposta que mais combina com a história de vocês.')
   .replace('<a class="button button-primary" href="#planos">Quero surpreender meu amor</a>', '<a class="button button-primary" href="#planos" data-start-order>Começar agora — R$ 49,90</a>')
   .replace('<a class="header-cta" href="#planos">Homenagear meu amor</a>', '<a class="header-cta" href="#planos" data-start-order>Começar — R$ 49,90</a>')
-  .replace('<span>✓ PIX ou link InfinitePay</span>', '<span>✓ PIX pela InfinitePay</span>')
-  .replace('<span>✓ Entrega digital</span>', '<span>✓ Até 3 edições da letra</span>')
-  .replace('<div class="announcement">\n    <span>🎂 O aniversário está chegando?</span>\n    <strong>Confirme o prazo de entrega pelo WhatsApp.</strong>\n  </div>', '<div class="announcement">\n    <span>🎵 Sua história merece cuidado.</span>\n    <strong>R$ 49,90 no PIX • ou 12x de R$ 7,90 no cartão.</strong>\n  </div>');
+  .replace('<span>✓ PIX ou link InfinitePay</span>', '<span>✓ Atendimento pelo WhatsApp</span>')
+  .replace('<span>✓ Entrega digital</span>', '<span>✓ Você escolhe a direção musical</span>')
+  .replace('<div class="announcement">\n    <span>🎂 O aniversário está chegando?</span>\n    <strong>Confirme o prazo de entrega pelo WhatsApp.</strong>\n  </div>', '<div class="announcement">\n    <span>🎵 Sua história merece cuidado.</span>\n    <strong>R$ 49,90 no PIX • ou até 12x de R$ 4,99 no cartão.</strong>\n  </div>');
 
 // Alinha toda a comunicação pública ao valor-base de R$ 49,90 no cartão;
 // os juros do parcelamento são calculados pela InfinitePay para o cliente.
@@ -52,13 +56,14 @@ html = html
   .replaceAll('<button class="button button-primary plan-button" type="button">Escolher pagamento</button>', '<button class="button button-primary plan-button" type="button" onclick="const m=document.getElementById(\'order-modal\');m?.classList.add(\'is-open\');m?.setAttribute(\'aria-hidden\',\'false\');document.body.classList.add(\'modal-open\');return false;">Escolher pagamento</button>');
 
 const faqItems = [
-  ['Como funciona o pagamento?', 'Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito. No parcelamento, os juros são calculados pela InfinitePay e ficam por conta do cliente. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.'],
-  ['Eu pago antes de contar toda a história?', 'Sim. Primeiro você informa apenas seu nome e WhatsApp, escolhe a forma de pagamento e volta automaticamente para o site. Depois da confirmação, o formulário completo da história é liberado.'],
-  ['Posso alterar a letra antes da música ser gerada?', 'Sim. Você pode solicitar até 3 edições da letra. A produção do áudio só começa depois da sua aprovação final da letra.'],
-  ['O que conta como uma edição?', 'Uma edição é uma rodada de ajustes solicitados sobre a letra enviada para aprovação. Você pode reunir várias mudanças na mesma rodada para aproveitar melhor cada revisão.'],
-  ['Quando a música é gerada?', 'Somente depois que você aprovar a letra final. Assim evitamos gerar uma música com versos que você ainda gostaria de mudar.'],
-  ['Posso escolher o estilo musical e a voz?', 'Sim. Depois do PIX confirmado, você informa o estilo musical e a preferência de voz junto com a história.'],
-  ['Como recebo a música?', 'Após a aprovação da letra e a produção, a música final é entregue digitalmente pelo atendimento.'],
+  ['Preciso pagar para preencher o briefing?', 'Não. Você preenche a história, escolhe uma direção musical e envia o pedido para o atendimento. O vendedor confirma prazo, valor e forma de pagamento com você antes do fechamento.'],
+  ['O que acontece depois que eu envio?', 'O WhatsApp abre com seu briefing completo e a proposta escolhida. O vendedor continua a conversa, tira dúvidas e combina os próximos passos.'],
+  ['Posso escolher a direção da música?', 'Sim. O site apresenta cinco propostas: narrativa romântica, declaração cinematográfica, pop memorável, intimista e autoral.'],
+  ['Posso pedir alterações?', 'Sim. Use o campo de ajustes antes de enviar e explique ao vendedor o que deseja mudar. A quantidade de revisões e o prazo são combinados no atendimento.'],
+  ['Preciso saber escrever uma letra?', 'Não. Conte a história do seu jeito. O briefing organiza os detalhes para o vendedor transformar as lembranças em uma proposta de música.'],
+  ['Posso escolher o estilo musical e a voz?', 'Sim. Você informa o estilo e a preferência de voz no questionário.'],
+  ['Como funciona o pagamento?', 'O pagamento é combinado diretamente com o vendedor depois que ele confirmar a proposta, o prazo e o valor final.'],
+  ['Como recebo a música?', 'Depois do fechamento e da produção, a música final é entregue digitalmente pelo atendimento.'],
 ];
 
 const structuredData = `
@@ -72,10 +77,10 @@ const structuredData = `
       {
         '@type': 'Product',
         name: 'Música Personalizada Canção de Nós',
-        description: 'Música personalizada criada a partir da história do casal, com até 3 edições da letra antes da produção do áudio.',
+        description: 'Música personalizada criada a partir da história do casal, com atendimento individual pelo WhatsApp.',
         image: 'https://images.pexels.com/photos/6800136/pexels-photo-6800136.jpeg?auto=compress&cs=tinysrgb&w=1200',
         brand: { '@type': 'Brand', name: 'Canção de Nós' },
-        offers: { '@type': 'AggregateOffer', name: 'Canção de Nós', url: `${canonical}#planos`, priceCurrency: 'BRL', lowPrice: '49.90', highPrice: '94.80', offerCount: 2, availability: 'https://schema.org/InStock' }
+        offers: { '@type': 'Offer', name: 'Música personalizada Canção de Nós', url: `${canonical}#planos`, priceCurrency: 'BRL', price: '49.90', availability: 'https://schema.org/InStock' }
       },
       { '@type': 'FAQPage', mainEntity: faqItems.map(([name, text]) => ({ '@type': 'Question', name, acceptedAnswer: { '@type': 'Answer', text } })) }
     ]
@@ -83,6 +88,7 @@ const structuredData = `
   </script>`;
 
 html = html.replace('</head>', `${structuredData}\n</head>`);
+html = deferGoogleFonts(html);
 
 const seoSection = `    <section class="section seo-discovery-section" aria-labelledby="ideias-presente-title">
       <div class="section-heading"><span class="eyebrow">IDEIAS DE PRESENTE E HOMENAGEM</span><h2 id="ideias-presente-title">Encontre a música personalizada certa para cada momento</h2><p>Conteúdos para quem quer surpreender namorado, namorada, marido ou esposa com uma homenagem feita da própria história.</p></div>
@@ -100,21 +106,21 @@ const seoSection = `    <section class="section seo-discovery-section" aria-labe
 html = html.replace('</section>\n\n    <section class="section emotional-section">', `</section>\n\n${seoSection}\n\n    <section class="section emotional-section">`);
 
 const processSection = `    <section class="section section-soft" id="como-funciona">
-      <div class="section-heading"><span class="eyebrow">SEM DESPERDIÇAR SEU TEMPO</span><h2>Primeiro você aprova a letra. Só depois a música é gerada.</h2><p>Um fluxo simples para garantir que nomes, datas e sentimentos estejam certos antes da produção final.</p></div>
+      <div class="section-heading"><span class="eyebrow">ATENDIMENTO DE PESSOA PARA PESSOA</span><h2>Você prepara tudo. O vendedor fecha com você.</h2><p>Um fluxo simples para entender sua história antes de falar sobre prazo, valor e pagamento.</p></div>
       <div class="steps process-five">
-        <article class="step-card"><span class="step-number">01</span><h3>Inicie o pedido</h3><p>Informe apenas seu nome e WhatsApp para identificarmos o pedido.</p></article>
-        <article class="step-card"><span class="step-number">02</span><h3>Escolha como pagar</h3><p>Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.</p></article>
-        <article class="step-card"><span class="step-number">03</span><h3>Conte sua história</h3><p>Com o PIX confirmado, informe nomes, momentos, estilo, voz, apelidos e tudo que deve aparecer.</p></article>
-        <article class="step-card"><span class="step-number">04</span><h3>Aprove a letra</h3><p>Receba a letra escrita e solicite até 3 edições para deixar cada detalhe do seu jeito.</p></article>
-        <article class="step-card"><span class="step-number">05</span><h3>Geramos a música</h3><p>Somente após sua aprovação final da letra começa a geração da música e a entrega digital.</p></article>
+        <article class="step-card"><span class="step-number">01</span><h3>Conte a história</h3><p>Informe nomes, momentos, datas, apelidos, estilo musical e tudo que torna vocês únicos.</p></article>
+        <article class="step-card"><span class="step-number">02</span><h3>Escolha uma proposta</h3><p>Veja cinco direções criativas e escolha a que mais combina com a homenagem.</p></article>
+        <article class="step-card"><span class="step-number">03</span><h3>Revise seu pedido</h3><p>Confira os dados e escreva qualquer ajuste que queira conversar com o atendimento.</p></article>
+        <article class="step-card"><span class="step-number">04</span><h3>Fale com o vendedor</h3><p>Seu briefing chega organizado no WhatsApp para o vendedor tirar dúvidas e confirmar a proposta.</p></article>
+        <article class="step-card"><span class="step-number">05</span><h3>Feche e acompanhe</h3><p>Depois de combinar pagamento e prazo, a produção começa com tudo alinhado.</p></article>
       </div>
     </section>`;
 html = html.replace(/    <section class="section section-soft" id="como-funciona">[\s\S]*?    <\/section>/, processSection);
 
 const offerSection = `    <section class="section plans-section" id="planos">
-      <div class="section-heading"><span class="eyebrow">ESCOLHA A FORMA DE PAGAMENTO</span><h2>Sua música personalizada a partir de R$ 49,90</h2><p>PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.</p></div>
-      <div class="single-offer"><article class="price-card featured"><span class="popular-badge">MÚSICA PERSONALIZADA COMPLETA</span><div><span class="plan-tag">CANÇÃO DE NÓS</span><h3>Sua história vira canção</h3><p class="plan-description">Sua história organizada primeiro em uma letra para você revisar e aprovar antes da geração da música.</p></div><div class="offer-payment-options"><div><strong>R$ 49,90</strong><span>no PIX</span></div><div><strong>12x R$ 7,90</strong><span>no cartão</span></div></div><span class="payment-pill">✓ PIX ou cartão pela InfinitePay</span><ul><li>Letra criada a partir da sua história</li><li>Nome, apelidos e momentos marcantes</li><li>Escolha do estilo musical</li><li>Preferência de voz</li><li>Até 3 edições da letra</li><li>Música gerada somente após sua aprovação</li><li>Entrega digital da música final</li></ul><button class="button button-primary plan-button" type="button">Escolher pagamento</button></article></div>
-      <p class="payment-note"><strong>Importante:</strong> as 3 edições são da letra escrita. Depois que você aprovar a letra e autorizar a geração da música, a produção do áudio é iniciada.</p>
+      <div class="section-heading"><span class="eyebrow">COMECE SEM COMPROMISSO</span><h2>Prepare sua música personalizada</h2><p>Preencha o briefing, escolha a direção da música e fale com o vendedor. O valor e o pagamento são confirmados no atendimento.</p></div>
+      <div class="single-offer"><article class="price-card featured"><span class="popular-badge">ATENDIMENTO PERSONALIZADO</span><div><span class="plan-tag">CANÇÃO DE NÓS</span><h3>Sua história vira uma proposta de música</h3><p class="plan-description">Você faz tudo pelo site até a escolha da direção. Depois, o vendedor recebe seu pedido no WhatsApp e fecha os detalhes com você.</p></div><div class="offer-payment-options"><div><strong>A partir de R$ 49,90</strong><span>valor de referência</span></div><div><strong>Pagamento combinado</strong><span>direto com o atendimento</span></div></div><span class="payment-pill">✓ Sem cobrança no site</span><ul><li>Questionário completo da história</li><li>Escolha entre 5 direções musicais</li><li>Nome, apelidos e momentos marcantes</li><li>Escolha do estilo e da voz</li><li>Campo para ajustes e observações</li><li>Briefing enviado pronto para o vendedor</li><li>Prazo e pagamento alinhados no WhatsApp</li></ul><button class="button button-primary plan-button" type="button" data-plan="Música personalizada" data-price="A confirmar no WhatsApp">Preparar meu briefing</button></article></div>
+      <p class="payment-note"><strong>Transparência:</strong> nenhuma cobrança acontece ao preencher o site. O atendimento confirma a proposta, o prazo, o valor final e a forma de pagamento antes de fechar.</p>
     </section>`;
 html = html.replace(/    <section class="section plans-section" id="planos">[\s\S]*?    <\/section>/, offerSection);
 
@@ -127,39 +133,30 @@ html = html
   .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>12x R$ 4,99</strong><span>no cartão + juros</span>')
   .replaceAll('<button class="button button-primary plan-button" type="button">Escolher pagamento</button>', '<button class="button button-primary plan-button" type="button" onclick="const m=document.getElementById(\'order-modal\');m?.classList.add(\'is-open\');m?.setAttribute(\'aria-hidden\',\'false\');document.body.classList.add(\'modal-open\');return false;">Escolher pagamento</button>');
 
-const faqHtml = `    <section class="section faq-section" id="duvidas"><div class="section-heading left"><span class="eyebrow">DÚVIDAS FREQUENTES</span><h2>Pagamento, revisões e produção</h2></div><div class="faq-list">${faqItems.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('')}</div></section>`;
+const faqHtml = `    <section class="section faq-section" id="duvidas"><div class="section-heading left"><span class="eyebrow">DÚVIDAS FREQUENTES</span><h2>Briefing, atendimento e produção</h2></div><div class="faq-list">${faqItems.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('')}</div></section>`;
 html = html.replace(/    <section class="section faq-section" id="duvidas">[\s\S]*?    <\/section>/, faqHtml);
 
 html = html
-  .replace('Faça a pessoa que você ama ouvir o quanto ela é especial.', 'Aprove a letra primeiro. Depois faça quem você ama ouvir a história de vocês.')
-  .replace('Conte a história de vocês. Nós transformamos tudo em uma homenagem feita para o aniversário dela.', 'Comece com o PIX de R$ 49,90, envie a história após a confirmação e revise a letra antes da produção.')
-  .replace('<a class="button button-light" href="#planos">Criar a música do meu amor</a>', '<a class="button button-light" href="#planos" data-start-order>Começar por R$ 49,90</a>');
+  .replace('Faça a pessoa que você ama ouvir o quanto ela é especial.', 'Faça a pessoa que você ama ouvir a história de vocês.')
+  .replace('Conte a história de vocês. Nós transformamos tudo em uma homenagem feita para o aniversário dela.', 'Prepare o briefing, escolha a proposta e converse com o vendedor pelo WhatsApp.')
+  .replace('<a class="button button-light" href="#planos">Criar a música do meu amor</a>', '<a class="button button-light" href="#planos" data-start-order>Preparar meu briefing</a>');
 
 const modalStart = html.indexOf('  <div class="modal" id="order-modal"');
 const floatingStart = html.indexOf('  <a class="floating-whatsapp"', modalStart);
 if (modalStart !== -1 && floatingStart !== -1) {
-  const paymentModal = `  <div class="modal" id="order-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  const x1Modal = `  <div class="modal" id="order-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-backdrop" data-close-modal></div>
-    <div class="modal-card payment-modal">
+    <div class="modal-card payment-modal x1-modal">
       <button class="modal-close" type="button" data-close-modal aria-label="Fechar">×</button>
-      <span class="eyebrow">MÚSICA PERSONALIZADA • A PARTIR DE R$ 49,90</span><h2 id="modal-title">Comece seu pedido</h2>
-      <div class="checkout-flow">
-        <section class="checkout-step is-active" id="checkout-payment-step">
-          <div class="checkout-intro"><div class="checkout-price"><strong>R$ 49,90</strong><span>pagamento único</span></div><div class="checkout-badges"><span class="checkout-badge">✓ PIX pela InfinitePay</span><span class="checkout-badge">✓ Até 3 edições da letra</span><span class="checkout-badge">✓ Áudio só após aprovação</span></div><p>Para não tomar seu tempo agora, informe somente seu nome e WhatsApp. Depois do PIX confirmado, você volta para preencher a história completa.</p></div>
-          <form id="checkout-form"><div class="checkout-form-grid"><label>Seu nome<input type="text" name="customerName" required maxlength="100" autocomplete="name" placeholder="Seu nome" /></label><label>Seu WhatsApp<input type="tel" name="customerPhone" required maxlength="20" autocomplete="tel" placeholder="(22) 99999-9999" /></label></div><div class="order-summary-mini"><div><strong>Música personalizada</strong><br><span>Letra + até 3 edições + música após aprovação</span></div><strong>R$ 49,90</strong></div><button class="button button-primary form-submit" type="submit">Ir para o PIX seguro</button><p class="checkout-note">Após pagar, toque em <strong>Continuar</strong> na InfinitePay para voltar ao site. A confirmação será feita automaticamente.</p><div class="checkout-error" id="payment-error" role="alert"></div><div class="checkout-loading" id="payment-loading"><span class="checkout-spinner"></span><span>Preparando seu PIX...</span></div></form>
-        </section>
-        <section class="checkout-step" id="checkout-details-step">
-          <div class="payment-confirmed-card"><span class="checkout-badge success">✓ PIX confirmado</span><strong>Pagamento aprovado. Agora conte a história.</strong><p>Pedido: <span id="confirmed-order-id">confirmado</span></p></div>
-          <div class="revision-policy"><h3>Como funcionam as revisões</h3><ol><li>Nós criamos a primeira versão da letra.</li><li>Você pode solicitar até 3 rodadas de edição da letra.</li><li>Quando você aprovar a letra final, você autoriza a geração da música.</li><li>O áudio só é produzido depois dessa aprovação.</li></ol></div>
-          <form id="details-form"><div class="form-grid"><label>Nome da pessoa homenageada<input type="text" name="recipientName" required maxlength="80" placeholder="Nome de quem receberá a música" /></label><label>Ocasião<select name="occasion" required><option value="">Selecione</option><option>Aniversário da pessoa amada</option><option>Aniversário de namoro</option><option>Aniversário de casamento</option><option>Pedido de casamento</option><option>Casamento</option><option>Reconciliação</option><option>Declaração surpresa</option><option>Outra ocasião</option></select></label><label>Data da comemoração<input type="date" name="celebrationDate" required /></label><label>Estilo musical<select name="musicStyle" required><option value="">Selecione</option><option>Sertanejo romântico</option><option>Pagode romântico</option><option>Pop</option><option>MPB</option><option>Gospel</option><option>Forró</option><option>Rock romântico</option><option>Outro estilo</option></select></label><label>Preferência de voz<select name="voice" required><option value="">Selecione</option><option>Voz masculina</option><option>Voz feminina</option><option>Sem preferência</option></select></label><label>Como você chama essa pessoa? <span class="optional">(opcional)</span><input type="text" name="nickname" maxlength="80" placeholder="Amor, vida, apelido do casal..." /></label></div><label>A história de vocês<textarea name="story" required minlength="40" maxlength="3000" placeholder="Como vocês se conheceram? Quais momentos, lugares, dificuldades, conquistas, viagens, apelidos ou frases não podem faltar?"></textarea></label><label>O que você deseja que essa pessoa sinta ao ouvir? <span class="optional">(opcional)</span><textarea name="message" maxlength="1000" placeholder="Ex.: Quero que ela se sinta amada, valorizada e saiba que sou grato por tudo o que vivemos."></textarea></label><label class="consent"><input type="checkbox" required /><span>Entendi que tenho direito a até 3 edições da letra e que a música só será gerada depois da minha aprovação final.</span></label><button class="button button-primary form-submit" type="submit">Enviar dados da música</button><p class="form-help">Antes de enviar, o sistema confirma novamente o PIX de R$ 49,90.</p></form>
-        </section>
-      </div>
+      <span class="eyebrow">MÚSICA PERSONALIZADA • ATENDIMENTO NO WHATSAPP</span>
+      <h2 id="modal-title">Prepare seu briefing</h2>
+      <p>Conte sua história e escolha a direção da música. O atendimento recebe tudo pronto para conversar com você.</p>
     </div>
   </div>\n\n`;
-  html = html.slice(0, modalStart) + paymentModal + html.slice(floatingStart);
+  html = html.slice(0, modalStart) + x1Modal + html.slice(floatingStart);
 }
 
-html = html.replace('<span>Homenagear no WhatsApp</span>', '<span>Começar por R$ 49,90</span>');
+html = html.replace('<span>Homenagear no WhatsApp</span>', '<span>Preparar meu briefing</span>');
 html = html.replace('</footer>', `${siteLinks}\n  </footer>`);
 
 await writeFile('dist/index.html', html, 'utf8');
@@ -172,6 +169,7 @@ for (const entry of entries) {
   if (extname(entry.name) === '.html') {
     let page = await readFile(entry.name, 'utf8');
     if (!page.includes('seo-site-links')) page = page.replace('</footer>', `${siteLinks}\n</footer>`);
+    page = deferGoogleFonts(page);
     await writeFile(`dist/${entry.name}`, page, 'utf8');
   } else {
     await cp(entry.name, `dist/${entry.name}`);

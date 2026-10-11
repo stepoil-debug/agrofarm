@@ -14,7 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://images.pexels.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+  <link rel="preload" as="image" href="./hero-frame.jpg" fetchpriority="high" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" /></noscript>
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./enhancements.css" data-premium-layer />
 </head>
@@ -51,8 +53,8 @@
       </div>
 
       <div class="hero-visual">
-        <video class="hero-video" autoplay muted loop playsinline preload="metadata" aria-label="Casal abrindo um presente com música personalizada">
-          <source src="./hero-romantic-gift.mp4" type="video/mp4" />
+        <video class="hero-video" autoplay muted loop playsinline preload="none" poster="./hero-frame.jpg" data-lazy-video data-desktop-only aria-label="Casal abrindo um presente com música personalizada">
+          <source data-src="./hero-romantic-gift.mp4" type="video/mp4" />
         </video>
         <div class="hero-overlay"></div>
         <div class="reaction-card">
@@ -142,8 +144,8 @@
 
     <section class="section birthday-scene">
       <div class="birthday-photo">
-        <video class="birthday-video" autoplay muted loop playsinline preload="metadata" aria-label="Celular tocando uma música personalizada sobre uma mesa de presente">
-          <source src="./story-phone-music.mp4" type="video/mp4" />
+        <video class="birthday-video" autoplay muted loop playsinline preload="none" poster="./story-frame.jpg" data-lazy-video data-desktop-only aria-label="Celular tocando uma música personalizada sobre uma mesa de presente">
+          <source data-src="./story-phone-music.mp4" type="video/mp4" />
         </video>
       </div>
       <div class="birthday-copy">

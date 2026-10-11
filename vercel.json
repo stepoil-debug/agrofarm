@@ -20,11 +20,20 @@
       ]
     },
     {
-      "source": "/(.*).(css|js|svg)",
+      "source": "/(.*)\\.(css|js|svg)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600, s-maxage=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(mp4|webm|mp3|jpg|jpeg|png|webp)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, s-maxage=2592000"
         }
       ]
     }
