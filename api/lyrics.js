@@ -63,6 +63,7 @@ const SYSTEM = [
   'Evite clichês vazios e exageros; prefira imagens concretas da história do casal.',
   'Estruture com marcações entre colchetes: [Verso 1], [Pré-refrão], [Refrão], [Verso 2], [Refrão], [Ponte], [Refrão final].',
   'Entre 180 e 260 palavras. O nome ou apelido da pessoa homenageada deve aparecer no refrão.',
+  'Crie um título original e poético, tirado da própria letra — nunca use o nome da direção criativa como título.',
   'Não invente fatos importantes que contradigam o briefing. Não inclua conteúdo ofensivo.',
   'Responda SOMENTE com JSON válido no formato {"title": "...", "lyrics": "..."} usando \\n para quebras de linha.',
 ].join(' ');
