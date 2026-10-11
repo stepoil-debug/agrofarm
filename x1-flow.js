@@ -120,53 +120,173 @@
       const order = Object.fromEntries(new FormData(form).entries());
       order.customerPhone = normalizePhone(order.customerPhone);
       order.plan = plan.plan || saved.plan || 'Música personalizada';
-      order.price = plan.price || saved.price || 'A confirmar no WhatsApp';
+      order.price = plan.price || saved.price || 'A partir de R$ 49,90';
       order.createdAt = Date.now();
-      const models = createModels(order);
       saveOrder(order);
-      saveState({ order, models, selectedIndex: 0, notes: '', status: 'choosing', updatedAt: Date.now() });
       track('ViewContent', { content_name: 'Propostas de música personalizada' });
-      renderModelChoice(order, models, 0, '');
+      composeLyrics(order);
     });
     setTimeout(() => card.querySelector('[name="customerName"]')?.focus(), 80);
+  }
+
+  // Letra modelo usada só quando a IA não responde, para o fluxo nunca travar.
+  const templateLyrics = (model) => `[Verso]\n${model.preview.split(' / ').join('\n')}\n\n[Refrão]\n${model.title}`;
+
+  const postLyrics = async (payload) => {
+    const response = await fetch('/api/lyrics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.success) throw new Error(data.message || 'Falha ao gerar a letra.');
+    return data;
+  };
+
+  function renderComposing(order) {
+    const card = modal.querySelector('.modal-card');
+    if (!card) return;
+    card.className = 'modal-card payment-modal x1-modal';
+    card.innerHTML = `
+      <button class="modal-close" type="button" data-x1-close aria-label="Fechar">×</button>
+      <span class="eyebrow">ETAPA 2 DE 3 • COMPONDO</span>
+      <h2>Compondo 5 versões da música de ${escapeHtml(order.recipientName)}…</h2>
+      <p class="brief-intro">Estamos transformando a história de vocês em letras completas. Isso leva cerca de 20 segundos.</p>
+      ${progress(2)}
+      <div class="x1-composing" aria-live="polite"><span class="x1-composing-disc" aria-hidden="true"></span><p data-composing-line>Lendo a história de vocês…</p></div>`;
+    card.querySelector('[data-x1-close]')?.addEventListener('click', closeModal);
+    const lines = ['Lendo a história de vocês…', 'Encontrando as rimas certas…', 'Colocando o nome no refrão…', 'Escrevendo a ponte mais emocionante…', 'Revisando cada verso…'];
+    let step = 0;
+    const timer = setInterval(() => {
+      const line = card.querySelector('[data-composing-line]');
+      if (!line) return clearInterval(timer);
+      step = (step + 1) % lines.length;
+      line.textContent = lines[step];
+    }, 3200);
+    return () => clearInterval(timer);
+  }
+
+  async function composeLyrics(order) {
+    const stop = renderComposing(order);
+    let models;
+    try {
+      const { versions } = await postLyrics({ action: 'generate', order });
+      const fallback = createModels(order);
+      models = versions.map((version, index) => (version
+        ? { ...fallback[index], name: version.name, angle: version.angle, title: version.title, lyrics: version.lyrics, source: 'ai' }
+        : { ...fallback[index], lyrics: templateLyrics(fallback[index]), source: 'template' }));
+      track('LyricsGenerated', { content_name: 'Letras geradas por IA' });
+    } catch (error) {
+      models = createModels(order).map((model) => ({ ...model, lyrics: templateLyrics(model), source: 'template' }));
+    }
+    stop?.();
+    saveState({ order, models, selectedIndex: 0, notes: '', status: 'choosing', updatedAt: Date.now() });
+    renderModelChoice(order, models, 0, '');
   }
 
   function renderModelChoice(order, models, selectedIndex = 0, notes = '') {
     const card = modal.querySelector('.modal-card');
     if (!card) return;
     const selected = models[selectedIndex] || models[0];
+    if (!selected.lyrics) selected.lyrics = templateLyrics(selected);
+    const persist = (status = 'choosing') => saveState({ order, models, selectedIndex, notes, status, updatedAt: Date.now() });
     card.className = 'modal-card payment-modal x1-modal';
     card.innerHTML = `
       <button class="modal-close" type="button" data-x1-close aria-label="Fechar">×</button>
-      <span class="eyebrow">ETAPA 2 DE 3 • ESCOLHA A DIREÇÃO</span>
-      <h2>Qual dessas propostas combina mais com vocês?</h2>
-      <p class="brief-intro">Criamos cinco caminhos a partir da sua história. Escolha o que mais combina com o momento — o vendedor ajusta os detalhes com você no WhatsApp.</p>
+      <span class="eyebrow">ETAPA 2 DE 3 • ESCOLHA E AJUSTE A LETRA</span>
+      <h2>5 letras feitas para ${escapeHtml(order.recipientName)}</h2>
+      <p class="brief-intro">Escolha a versão que mais tocou você. Edite o texto à vontade ou peça um ajuste — quando estiver do seu jeito, aprove a letra.</p>
       ${progress(2)}
-      <div class="lyrics-draft-grid x1-model-grid" aria-label="Propostas de música">
-        ${models.map((model, index) => `<button class="lyrics-draft-picker${index === selectedIndex ? ' is-selected' : ''}" type="button" data-model-index="${index}"><span class="draft-number">0${index + 1}</span><strong>${escapeHtml(model.name)}</strong><small>${escapeHtml(model.angle)}</small><em>${escapeHtml(model.style)}</em></button>`).join('')}
+      <div class="lyrics-draft-grid x1-model-grid" aria-label="Versões da letra">
+        ${models.map((model, index) => `<button class="lyrics-draft-picker${index === selectedIndex ? ' is-selected' : ''}" type="button" data-model-index="${index}"><span class="draft-number">0${index + 1}</span><strong>${escapeHtml(model.title)}</strong><small>${escapeHtml(model.angle)}</small></button>`).join('')}
       </div>
-      <div class="x1-selected-proposal"><span class="eyebrow">PROPOSTA 0${selectedIndex + 1}</span><h3>${escapeHtml(selected.title)}</h3><p>${escapeHtml(selected.intro)}</p><blockquote>${escapeHtml(selected.preview)}</blockquote></div>
-      <label>Quer algum ajuste nesta direção? <span class="optional">(opcional)</span><textarea id="x1-notes" maxlength="1200" placeholder="Ex.: Quero uma letra mais emocionante, citar nossos dois filhos e terminar com uma declaração de amor.">${escapeHtml(notes)}</textarea></label>
-      <div class="brief-submit-actions x1-actions"><button class="button button-outline" type="button" id="x1-back-form">Voltar e editar história</button><button class="button button-primary form-submit" type="button" id="x1-review">Revisar pedido</button></div>
-      <p class="form-help">A prévia é uma direção criativa. A versão final será alinhada pelo vendedor antes da produção.</p>`;
+      <div class="x1-selected-proposal x1-lyrics-editor">
+        <span class="eyebrow">VERSÃO 0${selectedIndex + 1} • ${escapeHtml(selected.name)}</span>
+        <label>Título<input type="text" id="x1-title" maxlength="120" value="${escapeHtml(selected.title)}" /></label>
+        <label>Letra <span class="optional">(clique para editar)</span><textarea id="x1-lyrics" class="x1-lyrics" maxlength="4000" rows="14">${escapeHtml(selected.lyrics)}</textarea></label>
+        ${selected.source === 'template' ? '<p class="form-help">Mostramos uma versão-base. O atendimento lapida a letra com você no WhatsApp.</p>' : ''}
+      </div>
+      <div class="x1-ai-revise">
+        <label>Quer que a gente ajuste esta letra? <span class="optional">(opcional)</span><textarea id="x1-instruction" maxlength="600" rows="2" placeholder="Ex.: mais emocionante, citar a Mel no refrão, terminar com um pedido de casamento…"></textarea></label>
+        <div class="x1-revise-actions"><button class="button button-outline" type="button" id="x1-revise">✨ Reescrever com esse ajuste</button>${selected.previous ? '<button class="button button-ghost" type="button" id="x1-undo">Desfazer</button>' : ''}</div>
+        <div class="checkout-error" id="x1-revise-error" role="alert"></div>
+      </div>
+      <div class="brief-submit-actions x1-actions"><button class="button button-outline" type="button" id="x1-back-form">Voltar e editar história</button><button class="button button-primary form-submit" type="button" id="x1-review">Aprovar esta letra</button></div>
+      <p class="form-help">Nenhuma cobrança agora. A letra aprovada vai para o atendimento no WhatsApp, onde fechamos produção, prazo e valor.</p>`;
+
+    const title = card.querySelector('#x1-title');
+    const lyrics = card.querySelector('#x1-lyrics');
+    const syncEdits = () => {
+      selected.title = title.value.trim() || selected.title;
+      selected.lyrics = lyrics.value;
+      persist();
+    };
+    title?.addEventListener('input', syncEdits);
+    lyrics?.addEventListener('input', syncEdits);
+
     card.querySelector('[data-x1-close]')?.addEventListener('click', closeModal);
     card.querySelector('#x1-back-form')?.addEventListener('click', () => renderForm(order));
     card.querySelectorAll('[data-model-index]').forEach((button) => button.addEventListener('click', () => {
-      const currentNotes = card.querySelector('#x1-notes')?.value || '';
-      const index = Number(button.dataset.modelIndex);
-      saveState({ order, models, selectedIndex: index, notes: currentNotes, status: 'choosing', updatedAt: Date.now() });
-      renderModelChoice(order, models, index, currentNotes);
+      syncEdits();
+      selectedIndex = Number(button.dataset.modelIndex);
+      persist();
+      renderModelChoice(order, models, selectedIndex, notes);
     }));
+
+    card.querySelector('#x1-undo')?.addEventListener('click', () => {
+      Object.assign(selected, selected.previous, { previous: null });
+      persist();
+      renderModelChoice(order, models, selectedIndex, notes);
+    });
+
+    card.querySelector('#x1-revise')?.addEventListener('click', async () => {
+      const button = card.querySelector('#x1-revise');
+      const error = card.querySelector('#x1-revise-error');
+      const instruction = card.querySelector('#x1-instruction')?.value.trim();
+      error.classList.remove('is-visible');
+      if (!instruction) {
+        error.textContent = 'Escreva o que você quer mudar na letra.';
+        error.classList.add('is-visible');
+        return;
+      }
+      syncEdits();
+      button.disabled = true;
+      button.textContent = 'Reescrevendo…';
+      lyrics.setAttribute('aria-busy', 'true');
+      try {
+        const { version } = await postLyrics({ action: 'revise', order, instruction, version: { title: selected.title, lyrics: selected.lyrics, angle: selected.angle } });
+        selected.previous = { title: selected.title, lyrics: selected.lyrics };
+        selected.title = version.title;
+        selected.lyrics = version.lyrics;
+        selected.source = 'ai';
+        notes = [notes, instruction].filter(Boolean).join(' | ');
+        persist();
+        track('LyricsRevised', { content_name: 'Letra ajustada por IA' });
+        renderModelChoice(order, models, selectedIndex, notes);
+      } catch (err) {
+        button.disabled = false;
+        button.textContent = '✨ Reescrever com esse ajuste';
+        lyrics.removeAttribute('aria-busy');
+        error.textContent = err.message || 'Não conseguimos ajustar agora. Você pode editar o texto diretamente.';
+        error.classList.add('is-visible');
+      }
+    });
+
     card.querySelector('#x1-review')?.addEventListener('click', () => {
-      const currentNotes = card.querySelector('#x1-notes')?.value.trim() || '';
-      saveState({ order, models, selectedIndex, notes: currentNotes, status: 'reviewing', updatedAt: Date.now() });
-      renderReview(order, models[selectedIndex], currentNotes, selectedIndex);
+      syncEdits();
+      if (selected.lyrics.trim().length < 40) {
+        lyrics.focus();
+        return;
+      }
+      persist('reviewing');
+      track('LyricsApproved', { content_name: selected.name });
+      renderReview(order, selected, notes, selectedIndex);
     });
   }
 
   function buildMessage(order, model, notes) {
     return [
-      'Olá! Quero fechar minha música personalizada pelo atendimento. 🎵❤️',
+      'Olá! Aprovei a letra da minha música personalizada e quero fechar a produção. 🎵❤️',
       '',
       '*NOVO BRIEFING — CANÇÃO DE NÓS*',
       `*Plano/oferta:* ${order.plan || 'Música personalizada'}`,
@@ -188,12 +308,11 @@
       '',
       '*O QUE QUERO QUE A PESSOA SINTA*', order.message || 'Não informado',
       '',
-      '*PROPOSTA ESCOLHIDA*', `${model.name} — ${model.angle}`, `Título de referência: ${model.title}`,
-      `Prévia: ${model.preview}`,
+      `*LETRA APROVADA — ${model.name} (${model.angle})*`, `*${model.title}*`, '', model.lyrics || model.preview,
       '',
-      '*AJUSTES QUE GOSTARIA DE CONVERSAR*', notes || 'Nenhum ajuste adicional informado.',
+      '*AJUSTES PEDIDOS NO SITE*', notes || 'Nenhum.',
       '',
-      'Pode me confirmar o prazo, o valor final e a forma de pagamento para eu fechar o pedido?'
+      'Pode me confirmar o prazo, o valor e a forma de pagamento para produzirmos a música?'
     ].join('\n');
   }
 
@@ -204,12 +323,12 @@
     card.innerHTML = `
       <button class="modal-close" type="button" data-x1-close aria-label="Fechar">×</button>
       <span class="eyebrow">ETAPA 3 DE 3 • REVISE E ENVIE</span>
-      <h2>Seu pedido está pronto para o atendimento</h2>
-      <p class="brief-intro">Confira os dados abaixo. Ao enviar, o WhatsApp abrirá com tudo organizado para o vendedor continuar com você.</p>
+      <h2>Sua letra está aprovada ✓</h2>
+      <p class="brief-intro">Ao enviar, o WhatsApp abre com a letra completa e o briefing para o atendimento produzir a música com você.</p>
       ${progress(3)}
-      <div class="x1-review-card"><div><span class="small-label">PESSOA HOMENAGEADA</span><strong>${escapeHtml(order.recipientName)}</strong><p>${escapeHtml(order.occasion)} • ${escapeHtml(formatDate(order.celebrationDate))}</p></div><div><span class="small-label">DIREÇÃO ESCOLHIDA</span><strong>${escapeHtml(model.name)}</strong><p>${escapeHtml(model.angle)} • ${escapeHtml(order.musicStyle)}</p></div><div><span class="small-label">HISTÓRIA</span><p>${escapeHtml(compact(order.story, 'Não informada', 330))}</p></div>${notes ? `<div><span class="small-label">AJUSTES PEDIDOS</span><p>${escapeHtml(notes)}</p></div>` : ''}</div>
+      <div class="x1-review-card"><div><span class="small-label">PESSOA HOMENAGEADA</span><strong>${escapeHtml(order.recipientName)}</strong><p>${escapeHtml(order.occasion)} • ${escapeHtml(formatDate(order.celebrationDate))}</p></div><div><span class="small-label">LETRA APROVADA • ${escapeHtml(model.angle)} • ${escapeHtml(order.musicStyle)}</span><strong>${escapeHtml(model.title)}</strong><pre class="x1-lyrics-final">${escapeHtml(model.lyrics || model.preview)}</pre></div></div>
       <div class="checkout-note"><strong>Nenhuma cobrança será feita agora.</strong><br>O vendedor confirma prazo, disponibilidade, valor final e forma de pagamento diretamente com você.</div>
-      <div class="brief-submit-actions x1-actions"><button class="button button-outline" type="button" id="x1-edit-model">Voltar e escolher outra</button><button class="button button-primary form-submit" type="button" id="x1-send">Abrir WhatsApp e enviar pedido</button></div>
+      <div class="brief-submit-actions x1-actions"><button class="button button-outline" type="button" id="x1-edit-model">Voltar e editar a letra</button><button class="button button-primary form-submit" type="button" id="x1-send">Enviar letra aprovada pelo WhatsApp</button></div>
       <div class="checkout-error" id="x1-error" role="alert"></div>`;
     card.querySelector('[data-x1-close]')?.addEventListener('click', closeModal);
     card.querySelector('#x1-edit-model')?.addEventListener('click', () => renderModelChoice(order, getState()?.models || createModels(order), selectedIndex, notes));
@@ -235,7 +354,7 @@
   function renderSuccess(order, model) {
     const card = modal.querySelector('.modal-card');
     if (!card) return;
-    card.innerHTML = `<button class="modal-close" type="button" data-x1-close aria-label="Fechar">×</button><span class="eyebrow">PEDIDO ENVIADO</span><h2>Agora é só continuar no WhatsApp ✓</h2><div class="payment-confirmed-card brief-success-card"><span class="checkout-badge success">✓ Briefing recebido pelo atendimento</span><strong>${escapeHtml(model.name)} foi selecionada.</strong><p>O vendedor vai confirmar prazo, valor e pagamento com você. Se o WhatsApp não abriu, use o botão abaixo.</p></div><div class="brief-timeline"><article class="brief-timeline-item is-complete"><span>01</span><div><strong>História preenchida</strong><small>Todos os detalhes foram organizados.</small></div></article><article class="brief-timeline-item is-complete"><span>02</span><div><strong>Proposta escolhida</strong><small>${escapeHtml(model.angle)}.</small></div></article><article class="brief-timeline-item"><span>03</span><div><strong>Atendimento e fechamento</strong><small>O vendedor continua a conversa pelo WhatsApp.</small></div></article></div><button class="button button-primary form-submit" type="button" id="x1-resend">Abrir WhatsApp novamente</button>`;
+    card.innerHTML = `<button class="modal-close" type="button" data-x1-close aria-label="Fechar">×</button><span class="eyebrow">PEDIDO ENVIADO</span><h2>Agora é só continuar no WhatsApp ✓</h2><div class="payment-confirmed-card brief-success-card"><span class="checkout-badge success">✓ Briefing recebido pelo atendimento</span><strong>“${escapeHtml(model.title)}” foi enviada.</strong><p>O vendedor vai confirmar prazo, valor e pagamento com você. Se o WhatsApp não abriu, use o botão abaixo.</p></div><div class="brief-timeline"><article class="brief-timeline-item is-complete"><span>01</span><div><strong>História preenchida</strong><small>Todos os detalhes foram organizados.</small></div></article><article class="brief-timeline-item is-complete"><span>02</span><div><strong>Letra aprovada</strong><small>${escapeHtml(model.angle)}.</small></div></article><article class="brief-timeline-item"><span>03</span><div><strong>Atendimento e fechamento</strong><small>O vendedor continua a conversa pelo WhatsApp.</small></div></article></div><button class="button button-primary form-submit" type="button" id="x1-resend">Abrir WhatsApp novamente</button>`;
     card.querySelector('[data-x1-close]')?.addEventListener('click', closeModal);
     card.querySelector('#x1-resend')?.addEventListener('click', async () => {
       await window.CancaoPublicConfig?.ready;
