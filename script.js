@@ -1,19 +1,27 @@
 (() => {
-  const desktop = window.matchMedia('(min-width: 900px)').matches;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saveData = navigator.connection?.saveData === true;
 
-  // Vídeo do hero: só no desktop, depois que a página ficou ociosa.
+  // Vídeos decorativos: carregam só quando entram na tela e pausam ao sair.
+  // Com "reduzir movimento" ou economia de dados, fica apenas o poster.
   const loadDeferredVideos = () => {
-    if (!desktop || reducedMotion) return;
-    document.querySelectorAll('video[data-lazy-video]').forEach((video) => {
+    if (reducedMotion || saveData) return;
+    const videos = [...document.querySelectorAll('video[data-lazy-video]')];
+    const start = (video) => {
       const source = video.querySelector('source[data-src]');
-      if (!source?.dataset.src || video.dataset.loaded) return;
-      source.src = source.dataset.src;
-      video.dataset.loaded = 'true';
-      video.load();
-      video.addEventListener('playing', () => video.classList.add('is-playing'), { once: true });
+      if (source?.dataset.src && !video.dataset.loaded) {
+        source.src = source.dataset.src;
+        video.dataset.loaded = 'true';
+        video.load();
+        video.addEventListener('playing', () => video.classList.add('is-playing'), { once: true });
+      }
       video.play().catch(() => {});
-    });
+    };
+    if (!('IntersectionObserver' in window)) { videos.forEach(start); return; }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(({ target, isIntersecting }) => (isIntersecting ? start(target) : target.pause()));
+    }, { rootMargin: '200px 0px', threshold: 0.01 });
+    videos.forEach((video) => observer.observe(video));
   };
   const idle = window.requestIdleCallback
     ? (callback) => window.requestIdleCallback(callback, { timeout: 2500 })

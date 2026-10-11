@@ -13,7 +13,7 @@ const LOGO = `${SITE}/assets/logo-512.png`;
 const BUILD_DATE = process.env.BUILD_DATE || new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
 const PRICE = '49.90';
 const FONTS = 'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&display=swap';
-const ASSET_VERSION = '20261010-1';
+const ASSET_VERSION = '20261010-2';
 
 // Páginas de conteúdo. kind: servico (landing comercial) | guia (artigo).
 const PAGES = [
@@ -121,7 +121,7 @@ const headTags = ({ title, description, path, image = OG_IMAGE, type = 'website'
   <meta property="og:image" content="${img}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Casal abrindo um presente com uma música personalizada" />
+  <meta property="og:image:alt" content="Mulher emocionada sorrindo para o parceiro ao ouvir sua música personalizada" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${esc(title)}" />
   <meta name="twitter:description" content="${esc(description)}" />
