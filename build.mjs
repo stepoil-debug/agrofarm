@@ -1,182 +1,476 @@
-import { cp, mkdir, rm, readFile, writeFile, readdir } from 'node:fs/promises';
-import { extname } from 'node:path';
+// Build estático da Canção de Nós.
+// - index.html é o template da home (com marcadores <!--@...-->).
+// - As demais páginas .html são fontes de conteúdo: o build extrai título,
+//   descrição, hero e artigo e aplica o layout único do site.
+// - Gera schema.org, sitemap.xml e copia apenas os arquivos publicáveis.
+import { cp, mkdir, rm, readFile, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 
-const canonical = 'https://cancao.dflabs.app/';
-const allowedExtensions = new Set(['.html', '.css', '.js', '.svg', '.txt', '.xml', '.mp3', '.mp4', '.webm']);
-const siteLinks = `<nav class="seo-site-links" aria-label="Conteúdos e páginas úteis">
-  <a href="/guias">Guias</a>
-  <a href="/musica-personalizada-para-casal">Música para casal</a>
-  <a href="/musica-personalizada-para-namorado">Para namorado</a>
-  <a href="/musica-personalizada-para-namorada">Para namorada</a>
-  <a href="/ideias-de-presente-romantico">Presentes românticos</a>
-  <a href="/homenagem-de-aniversario">Homenagem de aniversário</a>
-  <a href="/privacidade">Privacidade</a>
-  <a href="/termos">Termos e reembolso</a>
-</nav>`;
+const SITE = 'https://cancao.dflabs.app';
+const BRAND = 'Canção de Nós';
+const OG_IMAGE = `${SITE}/assets/og-cancao-de-nos.jpg`;
+const LOGO = `${SITE}/assets/logo-512.png`;
+const BUILD_DATE = process.env.BUILD_DATE || new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+const PRICE = '49.90';
+const FONTS = 'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&display=swap';
+const ASSET_VERSION = '20261010-2';
 
+// Páginas de conteúdo. kind: servico (landing comercial) | guia (artigo).
+const PAGES = [
+  { slug: 'musica-personalizada-para-casal', kind: 'servico', label: 'Música para casal', tag: 'Para o casal', priority: 0.95 },
+  { slug: 'musica-personalizada-para-namorada', kind: 'servico', label: 'Música para namorada', tag: 'Para ela', priority: 0.9 },
+  { slug: 'musica-personalizada-para-namorado', kind: 'servico', label: 'Música para namorado', tag: 'Para ele', priority: 0.9 },
+  { slug: 'musica-com-nome-da-pessoa', kind: 'servico', label: 'Música com nome da pessoa', tag: 'Com o nome', priority: 0.9 },
+  { slug: 'homenagem-de-aniversario', kind: 'servico', label: 'Homenagem de aniversário', tag: 'Aniversário', priority: 0.9 },
+  { slug: 'presente-de-aniversario-para-namorada', kind: 'servico', label: 'Presente para namorada', tag: 'Aniversário dela', priority: 0.9 },
+  { slug: 'presente-de-aniversario-para-namorado', kind: 'servico', label: 'Presente para namorado', tag: 'Aniversário dele', priority: 0.9 },
+  { slug: 'presente-de-aniversario-para-esposa', kind: 'servico', label: 'Presente para esposa', tag: 'Para a esposa', priority: 0.85 },
+  { slug: 'presente-de-aniversario-para-marido', kind: 'servico', label: 'Presente para marido', tag: 'Para o marido', priority: 0.85 },
+  { slug: 'musica-para-aniversario-de-casamento', kind: 'servico', label: 'Aniversário de casamento', tag: 'Bodas', priority: 0.85 },
+  { slug: 'musica-para-pedido-de-casamento', kind: 'servico', label: 'Pedido de casamento', tag: 'Pedido', priority: 0.85 },
+  { slug: 'ideias-de-presente-romantico', kind: 'guia', label: 'Ideias de presente romântico', tag: 'Presentes', priority: 0.8 },
+  { slug: 'como-surpreender-namorada-no-aniversario', kind: 'guia', label: 'Surpreender a namorada', tag: 'Aniversário dela', priority: 0.8 },
+  { slug: 'como-surpreender-namorado-no-aniversario', kind: 'guia', label: 'Surpreender o namorado', tag: 'Aniversário dele', priority: 0.8 },
+  { slug: 'presente-criativo-aniversario-de-namoro', kind: 'guia', label: 'Aniversário de namoro', tag: 'Data do casal', priority: 0.8 },
+  { slug: 'como-escrever-homenagem-de-aniversario', kind: 'guia', label: 'Como escrever homenagem', tag: 'Texto', priority: 0.75 },
+];
+const LEGAL = [
+  { slug: 'privacidade', label: 'Privacidade' },
+  { slug: 'termos', label: 'Termos de uso' },
+];
+
+const HOME_FAQ = [
+  ['O que é uma música personalizada?', 'É uma canção original criada a partir da história que você conta: nomes, apelidos, lugares, datas e sentimentos. A letra e o clima da música são pensados para uma única pessoa — por isso ninguém mais recebe a mesma canção.'],
+  ['Quanto custa uma música personalizada?', 'A música personalizada da Canção de Nós custa a partir de R$ 49,90. O valor final, o prazo e a forma de pagamento são confirmados no atendimento pelo WhatsApp antes de qualquer cobrança.'],
+  ['Preciso pagar para preencher o briefing?', 'Não. Você preenche a história, escolhe uma direção musical e envia o pedido para o atendimento sem nenhuma cobrança no site.'],
+  ['A música pode ter o nome da pessoa?', 'Sim. O nome, os apelidos e os detalhes que você informar podem aparecer na letra — inclusive no refrão, que é o momento em que a pessoa percebe que a música é só dela.'],
+  ['Preciso saber escrever uma letra?', 'Não. Conte a história do seu jeito, com suas palavras. O briefing organiza os detalhes e nós transformamos tudo em letra e música.'],
+  ['Posso escolher o estilo musical e a voz?', 'Sim. Você escolhe entre estilos como sertanejo romântico, pagode, MPB, pop, gospel, forró, rock romântico e voz e violão, além da preferência por voz masculina ou feminina.'],
+  ['Quanto tempo leva para ficar pronta?', 'O prazo depende do estilo e da fila de produção. Informe a data da comemoração no briefing: o atendimento confirma se consegue entregar a tempo antes de fechar o pedido.'],
+  ['Posso pedir alterações?', 'Sim. Você pode descrever ajustes já no briefing, e a quantidade de revisões é combinada com o atendimento antes da produção.'],
+  ['Como recebo a música?', 'A música é entregue em formato digital pelo WhatsApp, pronta para tocar no jantar, enviar à meia-noite ou usar em um vídeo com fotos do casal.'],
+  ['Como funciona o pagamento?', 'Depois de confirmar a proposta, o prazo e o valor com o atendimento, você paga por PIX ou cartão. A produção começa após a confirmação do pagamento.'],
+];
+
+// ---------- utilitários ----------
+const esc = (s) => String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+const decode = (s) => String(s ?? '').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+const strip = (s) => decode(String(s ?? '').replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+const pick = (html, re) => (html.match(re) || [])[1] || '';
+const url = (slug) => (slug ? `${SITE}/${slug}` : `${SITE}/`);
+const ld = (data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+const dateBR = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+const ORG = {
+  '@type': 'Organization',
+  '@id': `${SITE}/#organization`,
+  name: BRAND,
+  url: `${SITE}/`,
+  logo: { '@type': 'ImageObject', url: LOGO, width: 512, height: 512 },
+  image: OG_IMAGE,
+  description: 'Músicas personalizadas criadas a partir de histórias reais de casais e famílias.',
+  areaServed: { '@type': 'Country', name: 'Brasil' },
+};
+const WEBSITE = { '@type': 'WebSite', '@id': `${SITE}/#website`, name: BRAND, url: `${SITE}/`, inLanguage: 'pt-BR', publisher: { '@id': `${SITE}/#organization` } };
+const OFFER = {
+  '@type': 'Offer',
+  url: `${SITE}/#oferta`,
+  priceCurrency: 'BRL',
+  price: PRICE,
+  priceSpecification: { '@type': 'UnitPriceSpecification', price: PRICE, priceCurrency: 'BRL', valueAddedTaxIncluded: true },
+  availability: 'https://schema.org/InStock',
+  seller: { '@id': `${SITE}/#organization` },
+};
+const SERVICE = {
+  '@type': 'Service',
+  '@id': `${SITE}/#servico`,
+  name: 'Música personalizada',
+  serviceType: 'Composição de música personalizada',
+  description: 'Canção original criada a partir da história, dos nomes e das lembranças do cliente, com escolha de estilo musical e voz e entrega digital.',
+  provider: { '@id': `${SITE}/#organization` },
+  areaServed: { '@type': 'Country', name: 'Brasil' },
+  availableChannel: { '@type': 'ServiceChannel', serviceUrl: `${SITE}/`, name: 'Briefing online e atendimento pelo WhatsApp' },
+  offers: OFFER,
+};
+const faqSchema = (items, pageUrl) => ({
+  '@type': 'FAQPage',
+  '@id': `${pageUrl}#faq`,
+  mainEntity: items.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+});
+const faqHtml = (items) => `<div class="faq-list">\n${items.map(([q, a], i) => `          <details${i === 0 ? ' open' : ''}><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('\n')}\n        </div>`;
+const breadcrumbSchema = (trail) => ({
+  '@type': 'BreadcrumbList',
+  itemListElement: trail.map(([name, href], i) => ({ '@type': 'ListItem', position: i + 1, name, item: href })),
+});
+const breadcrumbHtml = (trail) => `<nav class="breadcrumb" aria-label="Você está em"><ol>${trail.map(([name, href], i) => (i === trail.length - 1 ? `<li aria-current="page">${esc(name)}</li>` : `<li><a href="${href.replace(SITE, '') || '/'}">${esc(name)}</a></li>`)).join('')}</ol></nav>`;
+
+// ---------- partials ----------
+const headTags = ({ title, description, path, image = OG_IMAGE, type = 'website', robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1' }) => {
+  const canonical = path === '/' ? `${SITE}/` : `${SITE}${path}`;
+  const img = image.startsWith('http') ? image : `${SITE}${image}`;
+  return `<meta name="robots" content="${robots}" />
+  <link rel="canonical" href="${canonical}" />
+  <meta name="theme-color" content="#6b1d40" />
+  <meta name="author" content="${BRAND}" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="${BRAND}" />
+  <meta property="og:type" content="${type}" />
+  <meta property="og:url" content="${canonical}" />
+  <meta property="og:title" content="${esc(title)}" />
+  <meta property="og:description" content="${esc(description)}" />
+  <meta property="og:image" content="${img}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Mulher emocionada sorrindo para o parceiro ao ouvir sua música personalizada" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${esc(title)}" />
+  <meta name="twitter:description" content="${esc(description)}" />
+  <meta name="twitter:image" content="${img}" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/logo-180.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="${FONTS}" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="${FONTS}" /></noscript>
+  <link rel="stylesheet" href="/checkout.css?v=${ASSET_VERSION}" />
+  <link rel="stylesheet" href="/site.css?v=${ASSET_VERSION}" />`;
+};
+
+const header = (isHome) => {
+  const h = (hash) => (isHome ? hash : `/${hash}`);
+  return `<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <div class="announcement"><span>🎵 Música personalizada <strong>a partir de R$ 49,90</strong></span><span class="sep">·</span><span class="hide-sm">Briefing sem custo e atendimento pelo WhatsApp</span></div>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="${BRAND} — página inicial"><span class="brand-mark" aria-hidden="true">♪</span><span class="brand-name">Canção de <em>Nós</em></span></a>
+      <nav class="nav" aria-label="Principal">
+        <a href="${h('#como-funciona')}">Como funciona</a>
+        <a href="${h('#exemplo')}">Ouvir exemplo</a>
+        <a href="${h('#ocasioes')}">Ocasiões</a>
+        <a href="${h('#duvidas')}">Dúvidas</a>
+        <a href="/guias">Guias</a>
+      </nav>
+      <a class="button button-primary header-cta" href="${h('#oferta')}">Criar minha música</a>
+    </div>
+  </header>`;
+};
+
+const footer = () => {
+  const services = PAGES.filter((p) => p.kind === 'servico');
+  const guides = PAGES.filter((p) => p.kind === 'guia');
+  const list = (items) => items.map((p) => `<li><a href="/${p.slug}">${esc(p.label)}</a></li>`).join('');
+  return `<footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">♪</span><span class="brand-name">Canção de <em>Nós</em></span></a>
+          <p>Músicas personalizadas que transformam a história de vocês em um presente para ouvir para sempre.</p>
+        </div>
+        <div class="footer-col"><h2>Músicas personalizadas</h2><ul>${list(services.slice(0, 6))}</ul></div>
+        <div class="footer-col"><h2>Ocasiões</h2><ul>${list(services.slice(6))}</ul></div>
+        <div class="footer-col"><h2>Guias</h2><ul><li><a href="/guias">Todos os guias</a></li>${list(guides)}<li><a href="/privacidade">Privacidade</a></li><li><a href="/termos">Termos de uso</a></li></ul></div>
+      </div>
+      <div class="footer-bottom"><span>© <span id="current-year">${BUILD_DATE.slice(0, 4)}</span> ${BRAND}. Todos os direitos reservados.</span><span>Imagens ilustrativas.</span></div>
+    </div>
+  </footer>
+
+  <div class="modal" id="order-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card payment-modal x1-modal">
+      <button class="modal-close" type="button" data-close-modal aria-label="Fechar">×</button>
+      <span class="eyebrow">Música personalizada</span>
+      <h2 id="modal-title">Prepare seu briefing</h2>
+      <p>Conte sua história e escolha a direção da música. O atendimento recebe tudo pronto para conversar com você.</p>
+    </div>
+  </div>
+
+  <a class="floating-whatsapp" href="/#oferta" aria-label="Criar minha música personalizada"><span>Criar minha música</span></a>
+
+  <script src="/public-config.js?v=${ASSET_VERSION}" defer></script>
+  <script src="/analytics.js?v=${ASSET_VERSION}" defer></script>
+  <script src="/script.js?v=${ASSET_VERSION}" defer></script>`;
+};
+
+const asideCard = () => `<aside class="aside-card" aria-label="Criar música personalizada">
+          <span class="eyebrow">Canção de Nós</span>
+          <h2>Transforme a história de vocês em música</h2>
+          <div class="price-mini"><small>a partir de</small>R$ 49,90</div>
+          <button class="button button-primary plan-button" type="button" data-plan="Música personalizada" data-price="A confirmar no WhatsApp">Criar minha música</button>
+          <ul><li>Briefing sem custo</li><li>Nome e detalhes na letra</li><li>Atendimento pelo WhatsApp</li></ul>
+        </aside>`;
+
+const ctaBand = (title, text) => `<section class="final-cta">
+      <div class="container">
+        <div class="final-card">
+          <span class="eyebrow">Canção de Nós</span>
+          <h2>${title}</h2>
+          <p>${text}</p>
+          <a class="button button-light" href="/#oferta" data-start-order>Criar minha música</a>
+        </div>
+      </div>
+    </section>`;
+
+const topicCards = (pages) => `<div class="topic-grid">${pages.map((p) => `
+          <a class="topic-card" href="/${p.slug}"><small>${esc(p.tag)}</small><h3>${esc(p.h1Short || p.label)}</h3>${p.description ? `<p>${esc(p.description)}</p>` : ''}<span class="more">${p.kind === 'guia' ? 'Ler guia' : 'Ver ideias'}</span></a>`).join('')}
+        </div>`;
+
+const page = ({ title, description, path, type, robots, schema, bodyClass = '', main }) => `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${esc(title)}</title>
+  <meta name="description" content="${esc(description)}" />
+  ${headTags({ title, description, path, type, robots })}
+  ${schema ? ld(schema) : ''}
+</head>
+<body class="${bodyClass}">
+  ${header(false)}
+
+  <main id="conteudo">
+${main}
+  </main>
+
+  ${footer()}
+</body>
+</html>
+`;
+
+// ---------- leitura das fontes ----------
+const readSource = async (slug) => {
+  const html = (await readFile(`${slug}.html`, 'utf8')).replace(/\r\n/g, '\n');
+  const heroBlock = pick(html, /<section class="seo-article-hero">([\s\S]*?)<\/section>/);
+  let article = pick(html, /<article class="seo-article[^"]*">([\s\S]*?)<\/article>/);
+  article = article
+    .replace(/<div class="cta-box">[\s\S]*?<\/div>/, '')
+    .replace(/<div class="related">[\s\S]*?<\/div>/, '')
+    .replace(/<nav class="seo-breadcrumb">[\s\S]*?<\/nav>/, '')
+    .replace(/<span class="eyebrow">[\s\S]*?<\/span>/, '')
+    .replace(/<h1>[\s\S]*?<\/h1>/, '')
+    .trim();
+  const ldRaw = pick(html, /<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+  let published = '2026-09-11';
+  try { published = JSON.parse(ldRaw)['@graph'].find((n) => n.datePublished)?.datePublished || published; } catch {}
+  return {
+    title: decode(pick(html, /<title>([\s\S]*?)<\/title>/)).trim(),
+    description: decode(pick(html, /<meta name="description" content="([^"]*)"/)),
+    eyebrow: strip(pick(heroBlock || html, /<span class="eyebrow">([\s\S]*?)<\/span>/)),
+    h1: strip(pick(heroBlock || html, /<h1>([\s\S]*?)<\/h1>/)),
+    lead: strip(pick(heroBlock, /<p>([\s\S]*?)<\/p>/)),
+    article,
+    published,
+  };
+};
+
+const readingTime = (html) => Math.max(2, Math.round(strip(html).split(' ').length / 200));
+const sentenceCase = (s) => (s && s === s.toUpperCase() ? s.charAt(0) + s.slice(1).toLowerCase() : s);
+
+// ---------- build ----------
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 
-let html = await readFile('index.html', 'utf8');
-// Os arquivos podem estar em CRLF no checkout do Windows; normalize antes
-// das substituições para que a versão publicada seja determinística.
-html = html.replace(/\r\n/g, '\n');
+const sources = new Map();
+for (const p of PAGES) {
+  const src = await readSource(p.slug);
+  sources.set(p.slug, src);
+  p.description = src.description;
+}
 
-html = html
-  .replace(/<title>.*?<\/title>/s, '<title>Música Personalizada por R$ 49,90 | Canção de Nós</title>')
-  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Crie uma música personalizada por R$ 49,90 no PIX ou em até 12x de R$ 4,99 no cartão. Os juros do parcelamento ficam por conta do cliente." />')
-  .replace('<meta name="theme-color" content="#681c43" />', '<meta name="theme-color" content="#681c43" />\n  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />\n  <meta name="author" content="Canção de Nós" />\n  <link rel="canonical" href="https://cancao.dflabs.app/" />')
-  .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="Música Personalizada por R$ 49,90 | Canção de Nós" />')
-  .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Sua história vira letra. Você pode pedir até 3 edições e só após aprovar geramos a música." />')
-  .replace('<meta property="og:type" content="website" />', '<meta property="og:type" content="website" />\n  <meta property="og:url" content="https://cancao.dflabs.app/" />\n  <meta property="og:site_name" content="Canção de Nós" />\n  <meta property="og:locale" content="pt_BR" />\n  <meta name="twitter:card" content="summary_large_image" />\n  <meta name="twitter:title" content="Música Personalizada por R$ 49,90 | Canção de Nós" />\n  <meta name="twitter:description" content="Pague no PIX, aprove a letra e só depois geramos a música." />\n  <meta name="twitter:image" content="https://images.pexels.com/photos/6800136/pexels-photo-6800136.jpeg?auto=compress&cs=tinysrgb&w=1200" />')
-  .replace('<link rel="stylesheet" href="./enhancements.css" data-premium-layer />', '<link rel="stylesheet" href="./enhancements.css" data-premium-layer />\n  <link rel="stylesheet" href="./seo.css" />\n  <link rel="stylesheet" href="./checkout.css?v=20260926-4" />')
-  .replace('<h1>O aniversário de quem você ama merece mais que um presente <em>qualquer.</em></h1>', '<h1>Música personalizada por <em>R$ 49,90</em>: sua história primeiro vira letra, depois vira música.</h1>')
-  .replace('Transforme a história de vocês em uma música personalizada, feita para emocionar e lembrar à pessoa amada o quanto ela é especial na sua vida.', 'Conte a história de vocês, pague com PIX e receba primeiro a letra personalizada. Você pode solicitar até 3 edições antes de aprovar a versão final e autorizar a geração da música.')
-  .replace('Você conta como tudo começou, os momentos marcantes, apelidos e frases de vocês. Nós transformamos essas lembranças em uma homenagem que ninguém mais poderia receber.', 'Assim você não perde tempo: a música só é produzida depois que a letra estiver exatamente como você quer.')
-  .replace('<a class="button button-primary" href="#planos">Quero surpreender meu amor</a>', '<a class="button button-primary" href="#planos" data-start-order>Começar agora — R$ 49,90</a>')
-  .replace('<a class="header-cta" href="#planos">Homenagear meu amor</a>', '<a class="header-cta" href="#planos" data-start-order>Começar — R$ 49,90</a>')
-  .replace('<span>✓ PIX ou link InfinitePay</span>', '<span>✓ PIX pela InfinitePay</span>')
-  .replace('<span>✓ Entrega digital</span>', '<span>✓ Até 3 edições da letra</span>')
-  .replace('<div class="announcement">\n    <span>🎂 O aniversário está chegando?</span>\n    <strong>Confirme o prazo de entrega pelo WhatsApp.</strong>\n  </div>', '<div class="announcement">\n    <span>🎵 Sua história merece cuidado.</span>\n    <strong>R$ 49,90 no PIX • ou 12x de R$ 7,90 no cartão.</strong>\n  </div>');
-
-// Alinha toda a comunicação pública ao valor-base de R$ 49,90 no cartão;
-// os juros do parcelamento são calculados pela InfinitePay para o cliente.
-html = html
-  .replaceAll('Crie uma música personalizada a partir de R$ 49,90 no PIX ou parcele em até 12x de R$ 7,90 no cartão. Aprove a letra antes da música.', 'Crie uma música personalizada por R$ 49,90 no PIX ou em até 12x de R$ 4,99 no cartão. Os juros do parcelamento ficam por conta do cliente.')
-  .replaceAll('R$ 49,90 no PIX • ou 12x de R$ 7,90 no cartão.', 'R$ 49,90 no PIX • ou até 12x de R$ 4,99 no cartão.')
-  .replaceAll('Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito em até 12x de R$ 7,90. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.', 'Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito em até 12x de R$ 4,99. Os juros são calculados pela InfinitePay e ficam por conta do cliente. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.')
-  .replaceAll('Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.', 'Use PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente e a InfinitePay confirma o pagamento automaticamente.')
-  .replaceAll('PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.', 'PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente. Após a confirmação, você envia a história completa.')
-  .replaceAll('<h2>Sua música personalizada a partir de R$ 49,90</h2>', '<h2>Sua música personalizada por R$ 49,90</h2>')
-  .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>12x R$ 4,99</strong><span>no cartão + juros</span>')
-  .replaceAll('<button class="button button-primary plan-button" type="button">Escolher pagamento</button>', '<button class="button button-primary plan-button" type="button" onclick="const m=document.getElementById(\'order-modal\');m?.classList.add(\'is-open\');m?.setAttribute(\'aria-hidden\',\'false\');document.body.classList.add(\'modal-open\');return false;">Escolher pagamento</button>');
-
-const faqItems = [
-  ['Como funciona o pagamento?', 'Você pode pagar R$ 49,90 no PIX ou escolher o cartão de crédito. No parcelamento, os juros são calculados pela InfinitePay e ficam por conta do cliente. O formulário completo só é liberado depois que a InfinitePay confirmar o pagamento.'],
-  ['Eu pago antes de contar toda a história?', 'Sim. Primeiro você informa apenas seu nome e WhatsApp, escolhe a forma de pagamento e volta automaticamente para o site. Depois da confirmação, o formulário completo da história é liberado.'],
-  ['Posso alterar a letra antes da música ser gerada?', 'Sim. Você pode solicitar até 3 edições da letra. A produção do áudio só começa depois da sua aprovação final da letra.'],
-  ['O que conta como uma edição?', 'Uma edição é uma rodada de ajustes solicitados sobre a letra enviada para aprovação. Você pode reunir várias mudanças na mesma rodada para aproveitar melhor cada revisão.'],
-  ['Quando a música é gerada?', 'Somente depois que você aprovar a letra final. Assim evitamos gerar uma música com versos que você ainda gostaria de mudar.'],
-  ['Posso escolher o estilo musical e a voz?', 'Sim. Depois do PIX confirmado, você informa o estilo musical e a preferência de voz junto com a história.'],
-  ['Como recebo a música?', 'Após a aprovação da letra e a produção, a música final é entregue digitalmente pelo atendimento.'],
-];
-
-const structuredData = `
-  <script type="application/ld+json">
-  ${JSON.stringify({
+// Home
+const homeUrl = `${SITE}/`;
+let home = (await readFile('index.html', 'utf8')).replace(/\r\n/g, '\n');
+const homeTitle = pick(home, /<title>([\s\S]*?)<\/title>/);
+const homeDesc = decode(pick(home, /<meta name="description" content="([^"]*)"/));
+home = home
+  .replace(/<!--@head[^>]*-->/, headTags({ title: decode(homeTitle), description: homeDesc, path: '/' }))
+  .replace('<!--@schema home-->', ld({
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'WebSite', '@id': `${canonical}#website`, name: 'Canção de Nós', url: canonical, inLanguage: 'pt-BR' },
-      { '@type': 'WebPage', '@id': `${canonical}#webpage`, name: 'Música Personalizada por R$ 49,90', url: canonical, isPartOf: { '@id': `${canonical}#website` }, inLanguage: 'pt-BR' },
-      { '@type': 'Organization', '@id': `${canonical}#organization`, name: 'Canção de Nós', url: canonical },
+      ORG,
+      WEBSITE,
+      { '@type': 'WebPage', '@id': `${homeUrl}#webpage`, url: homeUrl, name: decode(homeTitle), description: homeDesc, inLanguage: 'pt-BR', isPartOf: { '@id': `${SITE}/#website` }, about: { '@id': `${SITE}/#servico` }, primaryImageOfPage: OG_IMAGE, dateModified: BUILD_DATE },
+      SERVICE,
       {
         '@type': 'Product',
-        name: 'Música Personalizada Canção de Nós',
-        description: 'Música personalizada criada a partir da história do casal, com até 3 edições da letra antes da produção do áudio.',
-        image: 'https://images.pexels.com/photos/6800136/pexels-photo-6800136.jpeg?auto=compress&cs=tinysrgb&w=1200',
-        brand: { '@type': 'Brand', name: 'Canção de Nós' },
-        offers: { '@type': 'AggregateOffer', name: 'Canção de Nós', url: `${canonical}#planos`, priceCurrency: 'BRL', lowPrice: '49.90', highPrice: '94.80', offerCount: 2, availability: 'https://schema.org/InStock' }
+        '@id': `${SITE}/#produto`,
+        name: 'Música personalizada Canção de Nós',
+        description: 'Música original com o nome e a história de quem você ama. Escolha de estilo musical, voz e direção criativa, com entrega digital.',
+        image: OG_IMAGE,
+        brand: { '@type': 'Brand', name: BRAND },
+        category: 'Presentes personalizados > Música personalizada',
+        offers: OFFER,
       },
-      { '@type': 'FAQPage', mainEntity: faqItems.map(([name, text]) => ({ '@type': 'Question', name, acceptedAnswer: { '@type': 'Answer', text } })) }
-    ]
-  })}
-  </script>`;
+      faqSchema(HOME_FAQ, homeUrl),
+    ],
+  }))
+  .replace('<!--@header-->', header(true))
+  .replace('<!--@footer-->', footer())
+  .replace('<!--@faq home-->', faqHtml(HOME_FAQ));
+await writeFile('dist/index.html', home, 'utf8');
 
-html = html.replace('</head>', `${structuredData}\n</head>`);
+// Landings e guias
+for (const p of PAGES) {
+  const src = sources.get(p.slug);
+  const pageUrl = url(p.slug);
+  const trail = p.kind === 'guia'
+    ? [['Início', `${SITE}/`], ['Guias', `${SITE}/guias`], [p.label, pageUrl]]
+    : [['Início', `${SITE}/`], [p.label, pageUrl]];
+  // Rotaciona os relacionados para distribuir links internos entre todas as páginas.
+  const idx = PAGES.indexOf(p);
+  const pool = PAGES.filter((o) => o.slug !== p.slug);
+  const rel = [0, 1, 2].map((k) => pool[(idx * 3 + k) % pool.length]);
 
-const seoSection = `    <section class="section seo-discovery-section" aria-labelledby="ideias-presente-title">
-      <div class="section-heading"><span class="eyebrow">IDEIAS DE PRESENTE E HOMENAGEM</span><h2 id="ideias-presente-title">Encontre a música personalizada certa para cada momento</h2><p>Conteúdos para quem quer surpreender namorado, namorada, marido ou esposa com uma homenagem feita da própria história.</p></div>
-      <div class="seo-topic-grid">
-        <article class="seo-topic-card"><span>PARA CASAIS</span><h3>Música personalizada para casal</h3><p>Transforme o primeiro encontro, viagens, apelidos e momentos marcantes em uma canção só de vocês.</p><a href="/musica-personalizada-para-casal">Ver ideias para casal →</a></article>
-        <article class="seo-topic-card"><span>PARA ELE</span><h3>Música personalizada para namorado</h3><p>Um presente romântico ou divertido, com as referências que fazem parte da relação de vocês.</p><a href="/musica-personalizada-para-namorado">Criar surpresa para namorado →</a></article>
-        <article class="seo-topic-card"><span>PARA ELA</span><h3>Música personalizada para namorada</h3><p>Uma declaração com o nome dela e os detalhes que mostram o quanto você presta atenção.</p><a href="/musica-personalizada-para-namorada">Criar surpresa para namorada →</a></article>
-        <article class="seo-topic-card"><span>ANIVERSÁRIO</span><h3>Homenagem de aniversário</h3><p>Uma forma diferente de dizer parabéns usando sentimentos e lembranças reais em uma música.</p><a href="/homenagem-de-aniversario">Ver ideias de homenagem →</a></article>
-        <article class="seo-topic-card"><span>PRESENTES</span><h3>Ideias de presente romântico</h3><p>Opções para sair do presente genérico e criar uma experiência com significado.</p><a href="/ideias-de-presente-romantico">Ver ideias românticas →</a></article>
-        <article class="seo-topic-card"><span>GUIAS</span><h3>Surpresas, namoro e casamento</h3><p>Explore conteúdos para aniversário, aniversário de namoro, casamento e pedido de casamento.</p><a href="/guias">Explorar todos os guias →</a></article>
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      ORG,
+      WEBSITE,
+      {
+        '@type': p.kind === 'guia' ? 'BlogPosting' : 'Article',
+        '@id': `${pageUrl}#article`,
+        headline: src.h1.slice(0, 110),
+        description: src.description,
+        image: OG_IMAGE,
+        inLanguage: 'pt-BR',
+        datePublished: src.published,
+        dateModified: BUILD_DATE,
+        author: { '@id': `${SITE}/#organization` },
+        publisher: { '@id': `${SITE}/#organization` },
+        mainEntityOfPage: { '@id': `${pageUrl}#webpage` },
+        ...(p.kind === 'servico' ? { about: { '@id': `${SITE}/#servico` } } : {}),
+      },
+      { '@type': 'WebPage', '@id': `${pageUrl}#webpage`, url: pageUrl, name: src.title, description: src.description, inLanguage: 'pt-BR', isPartOf: { '@id': `${SITE}/#website` }, breadcrumb: { '@id': `${pageUrl}#breadcrumb` } },
+      { ...breadcrumbSchema(trail), '@id': `${pageUrl}#breadcrumb` },
+      ...(p.kind === 'servico' ? [SERVICE] : []),
+    ],
+  };
+
+  const main = `    <section class="page-hero">
+      <div class="container">
+        ${breadcrumbHtml(trail)}
+        <span class="eyebrow">${esc(sentenceCase(src.eyebrow) || p.tag)}</span>
+        <h1>${esc(src.h1)}</h1>
+        ${src.lead ? `<p class="lead">${esc(src.lead)}</p>` : ''}
+        <div class="page-meta"><span>Por ${BRAND}</span><span>Atualizado em <time datetime="${BUILD_DATE}">${dateBR(BUILD_DATE)}</time></span><span>${readingTime(src.article)} min de leitura</span></div>
       </div>
-      <p class="seo-hub-link"><a href="/guias">Ver todos os guias de presentes e homenagens →</a></p>
-    </section>`;
+    </section>
 
-html = html.replace('</section>\n\n    <section class="section emotional-section">', `</section>\n\n${seoSection}\n\n    <section class="section emotional-section">`);
-
-const processSection = `    <section class="section section-soft" id="como-funciona">
-      <div class="section-heading"><span class="eyebrow">SEM DESPERDIÇAR SEU TEMPO</span><h2>Primeiro você aprova a letra. Só depois a música é gerada.</h2><p>Um fluxo simples para garantir que nomes, datas e sentimentos estejam certos antes da produção final.</p></div>
-      <div class="steps process-five">
-        <article class="step-card"><span class="step-number">01</span><h3>Inicie o pedido</h3><p>Informe apenas seu nome e WhatsApp para identificarmos o pedido.</p></article>
-        <article class="step-card"><span class="step-number">02</span><h3>Escolha como pagar</h3><p>Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.</p></article>
-        <article class="step-card"><span class="step-number">03</span><h3>Conte sua história</h3><p>Com o PIX confirmado, informe nomes, momentos, estilo, voz, apelidos e tudo que deve aparecer.</p></article>
-        <article class="step-card"><span class="step-number">04</span><h3>Aprove a letra</h3><p>Receba a letra escrita e solicite até 3 edições para deixar cada detalhe do seu jeito.</p></article>
-        <article class="step-card"><span class="step-number">05</span><h3>Geramos a música</h3><p>Somente após sua aprovação final da letra começa a geração da música e a entrega digital.</p></article>
-      </div>
-    </section>`;
-html = html.replace(/    <section class="section section-soft" id="como-funciona">[\s\S]*?    <\/section>/, processSection);
-
-const offerSection = `    <section class="section plans-section" id="planos">
-      <div class="section-heading"><span class="eyebrow">ESCOLHA A FORMA DE PAGAMENTO</span><h2>Sua música personalizada a partir de R$ 49,90</h2><p>PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.</p></div>
-      <div class="single-offer"><article class="price-card featured"><span class="popular-badge">MÚSICA PERSONALIZADA COMPLETA</span><div><span class="plan-tag">CANÇÃO DE NÓS</span><h3>Sua história vira canção</h3><p class="plan-description">Sua história organizada primeiro em uma letra para você revisar e aprovar antes da geração da música.</p></div><div class="offer-payment-options"><div><strong>R$ 49,90</strong><span>no PIX</span></div><div><strong>12x R$ 7,90</strong><span>no cartão</span></div></div><span class="payment-pill">✓ PIX ou cartão pela InfinitePay</span><ul><li>Letra criada a partir da sua história</li><li>Nome, apelidos e momentos marcantes</li><li>Escolha do estilo musical</li><li>Preferência de voz</li><li>Até 3 edições da letra</li><li>Música gerada somente após sua aprovação</li><li>Entrega digital da música final</li></ul><button class="button button-primary plan-button" type="button">Escolher pagamento</button></article></div>
-      <p class="payment-note"><strong>Importante:</strong> as 3 edições são da letra escrita. Depois que você aprovar a letra e autorizar a geração da música, a produção do áudio é iniciada.</p>
-    </section>`;
-html = html.replace(/    <section class="section plans-section" id="planos">[\s\S]*?    <\/section>/, offerSection);
-
-// O bloco de oferta acima é inserido depois das substituições iniciais; por isso
-// normalizamos também o conteúdo final antes de gravar a página publicada.
-html = html
-  .replaceAll('Use PIX por R$ 49,90 ou cartão em até 12x de R$ 7,90. A InfinitePay confirma o pagamento automaticamente.', 'Use PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente e a InfinitePay confirma o pagamento automaticamente.')
-  .replaceAll('PIX à vista por R$ 49,90 ou cartão em até 12x de R$ 7,90. Após a confirmação, você envia a história completa.', 'PIX por R$ 49,90 ou cartão em até 12x de R$ 4,99. Os juros do cartão ficam por conta do cliente. Após a confirmação, você envia a história completa.')
-  .replaceAll('<h2>Sua música personalizada a partir de R$ 49,90</h2>', '<h2>Sua música personalizada por R$ 49,90</h2>')
-  .replaceAll('<strong>12x R$ 7,90</strong><span>no cartão</span>', '<strong>12x R$ 4,99</strong><span>no cartão + juros</span>')
-  .replaceAll('<button class="button button-primary plan-button" type="button">Escolher pagamento</button>', '<button class="button button-primary plan-button" type="button" onclick="const m=document.getElementById(\'order-modal\');m?.classList.add(\'is-open\');m?.setAttribute(\'aria-hidden\',\'false\');document.body.classList.add(\'modal-open\');return false;">Escolher pagamento</button>');
-
-const faqHtml = `    <section class="section faq-section" id="duvidas"><div class="section-heading left"><span class="eyebrow">DÚVIDAS FREQUENTES</span><h2>Pagamento, revisões e produção</h2></div><div class="faq-list">${faqItems.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('')}</div></section>`;
-html = html.replace(/    <section class="section faq-section" id="duvidas">[\s\S]*?    <\/section>/, faqHtml);
-
-html = html
-  .replace('Faça a pessoa que você ama ouvir o quanto ela é especial.', 'Aprove a letra primeiro. Depois faça quem você ama ouvir a história de vocês.')
-  .replace('Conte a história de vocês. Nós transformamos tudo em uma homenagem feita para o aniversário dela.', 'Comece com o PIX de R$ 49,90, envie a história após a confirmação e revise a letra antes da produção.')
-  .replace('<a class="button button-light" href="#planos">Criar a música do meu amor</a>', '<a class="button button-light" href="#planos" data-start-order>Começar por R$ 49,90</a>');
-
-const modalStart = html.indexOf('  <div class="modal" id="order-modal"');
-const floatingStart = html.indexOf('  <a class="floating-whatsapp"', modalStart);
-if (modalStart !== -1 && floatingStart !== -1) {
-  const paymentModal = `  <div class="modal" id="order-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal-backdrop" data-close-modal></div>
-    <div class="modal-card payment-modal">
-      <button class="modal-close" type="button" data-close-modal aria-label="Fechar">×</button>
-      <span class="eyebrow">MÚSICA PERSONALIZADA • A PARTIR DE R$ 49,90</span><h2 id="modal-title">Comece seu pedido</h2>
-      <div class="checkout-flow">
-        <section class="checkout-step is-active" id="checkout-payment-step">
-          <div class="checkout-intro"><div class="checkout-price"><strong>R$ 49,90</strong><span>pagamento único</span></div><div class="checkout-badges"><span class="checkout-badge">✓ PIX pela InfinitePay</span><span class="checkout-badge">✓ Até 3 edições da letra</span><span class="checkout-badge">✓ Áudio só após aprovação</span></div><p>Para não tomar seu tempo agora, informe somente seu nome e WhatsApp. Depois do PIX confirmado, você volta para preencher a história completa.</p></div>
-          <form id="checkout-form"><div class="checkout-form-grid"><label>Seu nome<input type="text" name="customerName" required maxlength="100" autocomplete="name" placeholder="Seu nome" /></label><label>Seu WhatsApp<input type="tel" name="customerPhone" required maxlength="20" autocomplete="tel" placeholder="(22) 99999-9999" /></label></div><div class="order-summary-mini"><div><strong>Música personalizada</strong><br><span>Letra + até 3 edições + música após aprovação</span></div><strong>R$ 49,90</strong></div><button class="button button-primary form-submit" type="submit">Ir para o PIX seguro</button><p class="checkout-note">Após pagar, toque em <strong>Continuar</strong> na InfinitePay para voltar ao site. A confirmação será feita automaticamente.</p><div class="checkout-error" id="payment-error" role="alert"></div><div class="checkout-loading" id="payment-loading"><span class="checkout-spinner"></span><span>Preparando seu PIX...</span></div></form>
-        </section>
-        <section class="checkout-step" id="checkout-details-step">
-          <div class="payment-confirmed-card"><span class="checkout-badge success">✓ PIX confirmado</span><strong>Pagamento aprovado. Agora conte a história.</strong><p>Pedido: <span id="confirmed-order-id">confirmado</span></p></div>
-          <div class="revision-policy"><h3>Como funcionam as revisões</h3><ol><li>Nós criamos a primeira versão da letra.</li><li>Você pode solicitar até 3 rodadas de edição da letra.</li><li>Quando você aprovar a letra final, você autoriza a geração da música.</li><li>O áudio só é produzido depois dessa aprovação.</li></ol></div>
-          <form id="details-form"><div class="form-grid"><label>Nome da pessoa homenageada<input type="text" name="recipientName" required maxlength="80" placeholder="Nome de quem receberá a música" /></label><label>Ocasião<select name="occasion" required><option value="">Selecione</option><option>Aniversário da pessoa amada</option><option>Aniversário de namoro</option><option>Aniversário de casamento</option><option>Pedido de casamento</option><option>Casamento</option><option>Reconciliação</option><option>Declaração surpresa</option><option>Outra ocasião</option></select></label><label>Data da comemoração<input type="date" name="celebrationDate" required /></label><label>Estilo musical<select name="musicStyle" required><option value="">Selecione</option><option>Sertanejo romântico</option><option>Pagode romântico</option><option>Pop</option><option>MPB</option><option>Gospel</option><option>Forró</option><option>Rock romântico</option><option>Outro estilo</option></select></label><label>Preferência de voz<select name="voice" required><option value="">Selecione</option><option>Voz masculina</option><option>Voz feminina</option><option>Sem preferência</option></select></label><label>Como você chama essa pessoa? <span class="optional">(opcional)</span><input type="text" name="nickname" maxlength="80" placeholder="Amor, vida, apelido do casal..." /></label></div><label>A história de vocês<textarea name="story" required minlength="40" maxlength="3000" placeholder="Como vocês se conheceram? Quais momentos, lugares, dificuldades, conquistas, viagens, apelidos ou frases não podem faltar?"></textarea></label><label>O que você deseja que essa pessoa sinta ao ouvir? <span class="optional">(opcional)</span><textarea name="message" maxlength="1000" placeholder="Ex.: Quero que ela se sinta amada, valorizada e saiba que sou grato por tudo o que vivemos."></textarea></label><label class="consent"><input type="checkbox" required /><span>Entendi que tenho direito a até 3 edições da letra e que a música só será gerada depois da minha aprovação final.</span></label><button class="button button-primary form-submit" type="submit">Enviar dados da música</button><p class="form-help">Antes de enviar, o sistema confirma novamente o PIX de R$ 49,90.</p></form>
-        </section>
-      </div>
+    <div class="container article-layout">
+      <article class="prose">
+        ${src.article}
+      </article>
+      ${asideCard()}
     </div>
-  </div>\n\n`;
-  html = html.slice(0, modalStart) + paymentModal + html.slice(floatingStart);
+
+    <section class="related" aria-labelledby="relacionados">
+      <div class="container">
+        <div class="section-head"><span class="eyebrow">Continue lendo</span><h2 id="relacionados">Mais ideias para emocionar</h2></div>
+        ${topicCards(rel)}
+      </div>
+    </section>
+
+    ${ctaBand('Faça uma música só de vocês', 'Conte a história, escolha o tom da canção e receba atendimento personalizado pelo WhatsApp.')}`;
+
+  await writeFile(`dist/${p.slug}.html`, page({ title: src.title, description: src.description, path: `/${p.slug}`, type: 'article', schema, bodyClass: `content-page ${p.kind}`, main }), 'utf8');
 }
 
-html = html.replace('<span>Homenagear no WhatsApp</span>', '<span>Começar por R$ 49,90</span>');
-html = html.replace('</footer>', `${siteLinks}\n  </footer>`);
+// Hub de guias
+{
+  const src = (await readFile('guias.html', 'utf8')).replace(/\r\n/g, '\n');
+  const title = decode(pick(src, /<title>([\s\S]*?)<\/title>/)).trim();
+  const description = decode(pick(src, /<meta name="description" content="([^"]*)"/));
+  const hero = pick(src, /<section class="seo-article-hero">([\s\S]*?)<\/section>/);
+  const pageUrl = url('guias');
+  const trail = [['Início', `${SITE}/`], ['Guias', pageUrl]];
+  const guides = PAGES.filter((p) => p.kind === 'guia');
+  const services = PAGES.filter((p) => p.kind === 'servico');
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      ORG, WEBSITE,
+      { '@type': 'CollectionPage', '@id': `${pageUrl}#webpage`, url: pageUrl, name: title, description, inLanguage: 'pt-BR', isPartOf: { '@id': `${SITE}/#website` }, breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+        mainEntity: { '@type': 'ItemList', itemListElement: [...guides, ...services].map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: url(p.slug), name: sources.get(p.slug).h1 })) } },
+      { ...breadcrumbSchema(trail), '@id': `${pageUrl}#breadcrumb` },
+    ],
+  };
+  const main = `    <section class="page-hero">
+      <div class="container">
+        ${breadcrumbHtml(trail)}
+        <span class="eyebrow">${esc(sentenceCase(strip(pick(hero, /<span class="eyebrow">([\s\S]*?)<\/span>/))))}</span>
+        <h1>${esc(strip(pick(hero, /<h1>([\s\S]*?)<\/h1>/)))}</h1>
+        <p class="lead">${esc(strip(pick(hero, /<p>([\s\S]*?)<\/p>/)))}</p>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="section-head"><span class="eyebrow">Guias</span><h2>Surpresas, presentes e homenagens</h2></div>
+        ${topicCards(guides)}
+      </div>
+    </section>
+    <section class="section related">
+      <div class="container">
+        <div class="section-head"><span class="eyebrow">Para cada pessoa</span><h2>Música personalizada para cada momento</h2></div>
+        ${topicCards(services)}
+      </div>
+    </section>
+    ${ctaBand('Pronto para criar a sua?', 'Comece pelo briefing — sem custo — e escolha a direção da sua música.')}`;
+  await writeFile('dist/guias.html', page({ title, description, path: '/guias', schema, bodyClass: 'content-page hub', main }), 'utf8');
+}
 
-await writeFile('dist/index.html', html, 'utf8');
+// Páginas legais (noindex)
+for (const l of LEGAL) {
+  const src = (await readFile(`${l.slug}.html`, 'utf8')).replace(/\r\n/g, '\n');
+  const title = decode(pick(src, /<title>([\s\S]*?)<\/title>/)).trim();
+  let article = pick(src, /<article class="seo-article[^"]*">([\s\S]*?)<\/article>/)
+    .replace(/<nav class="seo-breadcrumb">[\s\S]*?<\/nav>/, '')
+    .replace(/<span class="eyebrow">[\s\S]*?<\/span>/, '');
+  const h1 = strip(pick(article, /<h1>([\s\S]*?)<\/h1>/));
+  article = article.replace(/<h1>[\s\S]*?<\/h1>/, '').trim();
+  const main = `    <section class="page-hero"><div class="container">${breadcrumbHtml([['Início', `${SITE}/`], [l.label, url(l.slug)]])}<h1>${esc(h1)}</h1></div></section>
+    <div class="container legal section-tight"><article class="prose">${article}</article></div>`;
+  await writeFile(`dist/${l.slug}.html`, page({ title, description: `${l.label} da ${BRAND}.`, path: `/${l.slug}`, robots: 'noindex,follow', bodyClass: 'content-page legal-page', main }), 'utf8');
+}
 
-const entries = await readdir('.', { withFileTypes: true });
-let copied = 1;
-for (const entry of entries) {
-  if (!entry.isFile() || entry.name === 'index.html' || entry.name === 'build.mjs') continue;
-  if (!allowedExtensions.has(extname(entry.name))) continue;
-  if (extname(entry.name) === '.html') {
-    let page = await readFile(entry.name, 'utf8');
-    if (!page.includes('seo-site-links')) page = page.replace('</footer>', `${siteLinks}\n</footer>`);
-    await writeFile(`dist/${entry.name}`, page, 'utf8');
-  } else {
-    await cp(entry.name, `dist/${entry.name}`);
+// 404
+await writeFile('dist/404.html', page({
+  title: `Página não encontrada | ${BRAND}`,
+  description: 'A página que você procurou não foi encontrada.',
+  path: '/404',
+  robots: 'noindex,follow',
+  bodyClass: 'content-page',
+  main: `    <section class="page-hero"><div class="container"><span class="eyebrow">Erro 404</span><h1>Talvez a história tenha mudado de endereço.</h1><p class="lead">Volte para o início ou explore nossas ideias de músicas personalizadas.</p><p style="margin-top:24px"><a class="button button-primary" href="/">Ir para o início</a></p></div></section>
+    <section class="section related"><div class="container">${topicCards(PAGES.filter((p) => p.kind === 'servico').slice(0, 6))}</div></section>`,
+}), 'utf8');
+
+// Arquivos estáticos publicados (lista explícita).
+const STATIC = [
+  'site.css', 'checkout.css', 'script.js', 'x1-flow.js', 'public-config.js', 'analytics.js',
+  'favicon.svg', 'robots.txt', 'llms.txt', 'site.webmanifest', 'cancao-de-nos-theme.mp3', 'payment-return.html',
+];
+for (const file of STATIC) if (existsSync(file)) await cp(file, `dist/${file}`);
+await cp('assets', 'dist/assets', { recursive: true });
+
+// payment-return é do fluxo antigo: não deve ser indexado.
+{
+  const f = 'dist/payment-return.html';
+  if (existsSync(f)) {
+    const html = await readFile(f, 'utf8');
+    if (!html.includes('noindex')) await writeFile(f, html.replace('<head>', '<head>\n  <meta name="robots" content="noindex,nofollow" />'), 'utf8');
   }
-  copied += 1;
 }
 
-console.log(`SEO + PIX build ready: ${copied} static files published to dist/`);
+// Sitemap
+const entries = [
+  { loc: `${SITE}/`, priority: 1.0 },
+  { loc: `${SITE}/guias`, priority: 0.8 },
+  ...PAGES.map((p) => ({ loc: url(p.slug), priority: p.priority })),
+];
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${entries.map((e) => `  <url><loc>${e.loc}</loc><lastmod>${BUILD_DATE}</lastmod><priority>${e.priority.toFixed(2)}</priority>${e.loc === `${SITE}/` ? `<image:image><image:loc>${OG_IMAGE}</image:loc></image:image>` : ''}</url>`).join('\n')}
+</urlset>
+`;
+await writeFile('dist/sitemap.xml', sitemap, 'utf8');
+
+console.log(`Build ok: home + ${PAGES.length} páginas de conteúdo + guias + ${LEGAL.length} legais + 404 → dist/`);
