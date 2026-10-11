@@ -5,11 +5,11 @@ const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 const MODEL = process.env.AI_GATEWAY_MODEL || 'anthropic/claude-sonnet-5.5';
 
 const DIRECTIONS = [
-  { name: 'História em capítulos', angle: 'Narrativa romântica', brief: 'conta a relação em ordem, do primeiro encontro até hoje, ganhando força a cada verso' },
-  { name: 'Cena de cinema', angle: 'Declaração cinematográfica', brief: 'declaração grande, visual e emocionante, com imagens fortes, feita para o momento exato da surpresa' },
-  { name: 'Refrão que fica', angle: 'Pop leve e memorável', brief: 'refrão curto, simples e muito cantável, que gruda depois do primeiro play' },
-  { name: 'Perto do coração', angle: 'Intimista, voz e violão', brief: 'confessional e delicada, como uma conversa baixinho entre os dois' },
-  { name: 'Surpresa com sorriso', angle: 'Autoral e afetuosa', brief: 'leve e carinhosa, com espaço para manias, piadas internas e detalhes engraçados do casal' },
+  { name: 'História em capítulos', angle: 'Narrativa romântica', brief: 'conta a relação em ordem, do primeiro encontro até hoje, ganhando força a cada verso', titleHint: 'um título sobre a jornada do casal ou o tempo juntos' },
+  { name: 'Cena de cinema', angle: 'Declaração cinematográfica', brief: 'declaração grande, visual e emocionante, com imagens fortes, feita para o momento exato da surpresa', titleHint: 'um título cinematográfico, com uma imagem forte de um lugar ou momento' },
+  { name: 'Refrão que fica', angle: 'Pop leve e memorável', brief: 'refrão curto, simples e muito cantável, que gruda depois do primeiro play', titleHint: 'um título curto e cantável, igual ao gancho do refrão, com o nome ou apelido' },
+  { name: 'Perto do coração', angle: 'Intimista, voz e violão', brief: 'confessional e delicada, como uma conversa baixinho entre os dois', titleHint: 'um título intimista, como uma frase dita baixinho ao ouvido' },
+  { name: 'Surpresa com sorriso', angle: 'Autoral e afetuosa', brief: 'leve e carinhosa, com espaço para manias, piadas internas e detalhes engraçados do casal', titleHint: 'um título divertido a partir de uma mania, piada interna ou detalhe engraçado' },
 ];
 
 // Limite simples por IP para conter abuso (best effort por instância).
@@ -63,7 +63,7 @@ const SYSTEM = [
   'Evite clichês vazios e exageros; prefira imagens concretas da história do casal.',
   'Estruture com marcações entre colchetes: [Verso 1], [Pré-refrão], [Refrão], [Verso 2], [Refrão], [Ponte], [Refrão final].',
   'Entre 180 e 260 palavras. O nome ou apelido da pessoa homenageada deve aparecer no refrão.',
-  'Crie um título original e poético, tirado da própria letra — nunca use o nome da direção criativa como título.',
+  'Crie um título original — nunca use o nome da direção criativa como título.',
   'Não invente fatos importantes que contradigam o briefing. Não inclua conteúdo ofensivo.',
   'Responda SOMENTE com JSON válido no formato {"title": "...", "lyrics": "..."} usando \\n para quebras de linha.',
 ].join(' ');
@@ -128,7 +128,7 @@ module.exports = async function handler(req, res) {
     if (action === 'generate') {
       const results = await Promise.allSettled(DIRECTIONS.map((direction) => callModel(token, [
         { role: 'system', content: SYSTEM },
-        { role: 'user', content: `${briefingText(briefing)}\n\nDireção criativa desta versão: "${direction.name}" (${direction.angle}) — ${direction.brief}.\nEscreva a letra completa.` },
+        { role: 'user', content: `${briefingText(briefing)}\n\nDireção criativa desta versão: "${direction.name}" (${direction.angle}) — ${direction.brief}.\nPara o título, use ${direction.titleHint}.\nEscreva a letra completa.` },
       ])));
       const versions = results.map((result, index) => (result.status === 'fulfilled'
         ? { ...DIRECTIONS[index], ...result.value }

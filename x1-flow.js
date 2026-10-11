@@ -290,7 +290,7 @@
       '',
       '*NOVO BRIEFING — CANÇÃO DE NÓS*',
       `*Plano/oferta:* ${order.plan || 'Música personalizada'}`,
-      `*Valor informado no site:* ${order.price || 'A confirmar'}`,
+      '*Valor de referência no site:* a partir de R$ 49,90',
       '',
       `*Meu nome:* ${order.customerName}`,
       `*Meu WhatsApp:* ${order.customerPhone}`,
