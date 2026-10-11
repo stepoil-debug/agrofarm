@@ -82,9 +82,17 @@ async function callModel(token, messages) {
     throw error;
   }
   const data = await response.json();
-  const text = data?.choices?.[0]?.message?.content || '';
+  const choice = data?.choices?.[0] || {};
+  const content = choice.message?.content;
+  const text = Array.isArray(content)
+    ? content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join('')
+    : String(content || '');
   const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('resposta sem JSON');
+  if (!match) {
+    const error = new Error('resposta sem JSON');
+    error.detail = `finish=${choice.finish_reason} keys=${Object.keys(choice.message || {}).join(',')} text=${text.slice(0, 160)}`;
+    throw error;
+  }
   const parsed = JSON.parse(match[0]);
   const title = clean(parsed.title, 120);
   const lyrics = clean(parsed.lyrics, 4000);
