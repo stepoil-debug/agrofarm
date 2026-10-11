@@ -13,7 +13,7 @@ const LOGO = `${SITE}/assets/logo-512.png`;
 const BUILD_DATE = process.env.BUILD_DATE || new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
 const PRICE = '49.90';
 const FONTS = 'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&display=swap';
-const ASSET_VERSION = '20261011-1';
+const ASSET_VERSION = '20261011-2';
 
 // Páginas de conteúdo. kind: servico (landing comercial) | guia (artigo).
 const PAGES = [
