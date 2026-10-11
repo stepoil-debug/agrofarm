@@ -71,7 +71,9 @@ async function callModel(token, messages) {
   const response = await fetch(GATEWAY_URL, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, messages, max_tokens: 1200, temperature: 0.9 }),
+    // Raciocínio baixo: letras não precisam de "pensar" longo, e o raciocínio
+    // consome o mesmo limite de tokens da resposta.
+    body: JSON.stringify({ model: MODEL, messages, max_tokens: 4000, temperature: 0.9, reasoning: { effort: 'low', exclude: true } }),
     signal: AbortSignal.timeout(90000),
   });
   if (!response.ok) {
